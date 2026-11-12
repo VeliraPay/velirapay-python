@@ -135,6 +135,8 @@ class InvoiceCreateParams(TypedDict, total=False):
     items: Sequence[InvoiceItemParams]
     memo: str | None
     due_at: str | date | None
+    success_url: str | None
+    cancel_url: str | None
     send_email: bool
 
 

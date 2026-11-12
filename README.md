@@ -254,6 +254,7 @@ invoice = velirapay.invoices.create(
             {"description": "Hosting", "quantity": "1", "unit_amount": "250.00"},
         ],
         "due_at": date.today() + timedelta(days=14),
+        "success_url": "https://example.com/orders/1042",
         "send_email": True,
     }
 )
@@ -527,7 +528,7 @@ The charge and invoice in a delivery are not quite the ones the API answers with
 
 - A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`). Compare amounts as numbers, such as with `Decimal`, not as strings.
 - A charge has no `timeline`, `refunds`, `checkout_url`, `receipt_url`, `success_url`, `cancel_url` or `success_message`. Its payment link and invoice carry more than their codes: `charge.payment_link_title` and `charge.invoice_number`, which are `None` on the charges the API answers with.
-- An invoice has no `overdue` or `document_url`; both are `None`.
+- An invoice has no `overdue`, `document_url`, `success_url` or `cancel_url`; all four are `None`.
 - `charge.refunded` carries no refund. Read its amount, txid and reason from the event, with `velirapay.events.retrieve(event.event_id).details`.
 
 Fetch the object when you need what a delivery leaves out. The charges that events carry, in the events API, have no `timeline` either.

@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- `invoices.create()` takes `success_url` and `cancel_url`, public https:// addresses the invoice's page and its charges' checkout offer the customer a way back to: a button once they have paid, and a link while it is open. `invoice.success_url` and `invoice.cancel_url` read them back, and are `None` in webhooks, which leave them out.
+
 ## 0.2.0 - 2026-11-12
 
 - Amounts given as numbers are sent as decimal strings without an exponent: the amounts of charges, refunds, simulated payments, invoices and their items, payment links and coupons, and the payment tolerances. A float is rounded to 14 significant digits first, the precision the API reads a number with, so `0.00005` is sent as `"0.00005"` rather than as the `5e-05` the API refused, and `0.1 + 0.2` as `"0.3"`. A float that is not a number, or is infinite, raises an `InvalidArgumentError` before anything is sent. Metadata is sent as it is given.

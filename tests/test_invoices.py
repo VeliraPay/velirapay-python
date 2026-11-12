@@ -29,6 +29,8 @@ class InvoiceTest(unittest.TestCase):
                             {"description": "Hosting", "quantity": "2.5", "unit_amount": "100.00"},
                         ],
                         "due_at": due_at,
+                        "success_url": "https://example.com/orders/1042",
+                        "cancel_url": "https://example.com/checkout",
                         "send_email": True,
                     }
                 )
@@ -39,6 +41,8 @@ class InvoiceTest(unittest.TestCase):
                 self.assertEqual("/v1/invoices", path_of(request))
                 self.assertEqual("2026-10-15", sent["due_at"])
                 self.assertIs(True, sent["send_email"])
+                self.assertEqual("https://example.com/orders/1042", sent["success_url"])
+                self.assertEqual("https://example.com/checkout", sent["cancel_url"])
                 self.assertEqual("10", sent["items"][0]["quantity"])
                 self.assertEqual("w7c2h5j9d3kx", invoice.id)
 
@@ -93,6 +97,8 @@ class InvoiceTest(unittest.TestCase):
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
         self.assertEqual("https://velirapay.com/i/w7c2h5j9d3kx", invoice.hosted_url)
         self.assertEqual("https://velirapay.com/i/w7c2h5j9d3kx/document", invoice.document_url)
+        self.assertEqual("https://example.com/orders/1042", invoice.success_url)
+        self.assertIsNone(invoice.cancel_url)
         self.assertEqual([InvoiceCharge(id="m2q7w4e9r1ty", status="expired", asset="ETH")], invoice.charges)
         self.assertEqual(datetime(2026, 9, 21, 8, 0, tzinfo=UTC), invoice.sent_at)
         self.assertIsNone(invoice.paid_at)

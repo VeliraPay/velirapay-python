@@ -26,6 +26,8 @@
     "due_at": "2026-10-15",
     "hosted_url": "https://velirapay.com/i/w7c2h5j9d3kx",
     "document_url": "https://velirapay.com/i/w7c2h5j9d3kx/document",
+    "success_url": "https://example.com/orders/1042",
+    "cancel_url": null,
     "charges": [
         {
             "id": "m2q7w4e9r1ty",

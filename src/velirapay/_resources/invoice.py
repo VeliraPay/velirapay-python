@@ -130,6 +130,16 @@ class Invoice(ApiResource):
         """When it was created."""
         return timestamp(self._attributes, "created_at")
 
+    @property
+    def success_url(self) -> str | None:
+        """The page the customer is offered a button back to once they have paid; absent from webhooks."""
+        return nullable_string(self._attributes, "success_url")
+
+    @property
+    def cancel_url(self) -> str | None:
+        """The page the customer can go back to from the invoice without paying; absent from webhooks."""
+        return nullable_string(self._attributes, "cancel_url")
+
     def is_open(self) -> bool:
         """Whether the invoice can still be paid."""
         return self.status == InvoiceStatus.OPEN

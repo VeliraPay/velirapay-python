@@ -116,6 +116,7 @@ class WebhookTest(unittest.TestCase):
         self.assertTrue(invoice.is_paid())
         self.assertIsNone(invoice.overdue)
         self.assertIsNone(invoice.document_url)
+        self.assertIsNone(invoice.success_url)
         self.assertEqual(["m2q7w4e9r1ty", "z8x6c4v2b0nm"], [charge.id for charge in invoice.charges])
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
 
