@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "velirapay"
-version = "0.2.1"
+version = "0.2.2"
 description = "Official Python library for VeliraPay crypto payments: charges, payment links, invoices, payouts, events and webhook verification."
 readme = "README.md"
 requires-python = ">=3.11"

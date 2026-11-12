@@ -2,7 +2,7 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.2.2 - 2026-11-12
 
 - `charge.customer.ip_country`, `ip_asn` and `ip_network`: what VeliraPay works out from the customer's IP address, in the API's answers and in webhooks alike. `ip_country` is the country the hosted checkout placed the address in, as an ISO 3166 two-letter code or `T1` for Tor, and `None` for a charge created through the API; `ip_asn` is the number of the network (autonomous system) the address belongs to, an `int`, and `ip_network` who runs it, such as `24940` and `"Hetzner Online GmbH"`. A customer on a hosting company's network is often a bot or someone hiding behind a server. They are read only, and `None` in a payload that leaves them out.
 
