@@ -223,6 +223,8 @@ charge.customer.metadata    # {"orders": 7}
 
 Every field is optional, and any other key is refused with a `ValidationError`. The older `customer_email` parameter still works.
 
+The customer also comes back with what VeliraPay works out from the IP address, which you cannot send: `ip_country`, the country the hosted checkout placed it in, as an ISO 3166 two-letter code or `"T1"` for Tor (`None` for a charge created through the API), and `ip_asn` and `ip_network`, the number of the network it belongs to and who runs it, such as `24940` and `"Hetzner Online GmbH"`. A customer on a hosting company's network is often a bot or someone hiding behind a server, and a country that differs from the one they gave is worth a second look.
+
 ### Short and late payments
 
 A customer who sends less than a charge asks for leaves it `underpaid`, announced with `charge.underpaid`. One who pays after the rate lock ran out, to an expired or canceled charge or as a top-up to an underpaid one, makes a late payment, announced with `charge.late_payment`. Both wait for you to decide; a late payment on top of a paid charge is counted on its own.

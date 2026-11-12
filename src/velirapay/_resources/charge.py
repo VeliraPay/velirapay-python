@@ -12,6 +12,7 @@ from ._base import (
     boolean,
     integer,
     mapping,
+    nullable_int,
     nullable_string,
     record,
     records,
@@ -289,6 +290,21 @@ class Customer(ApiResource):
     def ip_address(self) -> str | None:
         """The IP address the customer paid from, recorded by the checkout or passed when the charge was created."""
         return nullable_string(self._attributes, "ip_address")
+
+    @property
+    def ip_country(self) -> str | None:
+        """The country the hosted checkout placed the IP address in, as an ISO 3166 two-letter code, or T1 for Tor; None for a charge created through the API."""
+        return nullable_string(self._attributes, "ip_country")
+
+    @property
+    def ip_asn(self) -> int | None:
+        """The number of the network (autonomous system) the IP address belongs to, such as 24940."""
+        return nullable_int(self._attributes, "ip_asn")
+
+    @property
+    def ip_network(self) -> str | None:
+        """Who runs that network, such as an internet provider or a hosting company."""
+        return nullable_string(self._attributes, "ip_network")
 
     @property
     def user_agent(self) -> str | None:

@@ -46,11 +46,28 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual(2, charge.transactions[0].confirmations)
         self.assertEqual(2, charge.transactions[0].required_confirmations)
         self.assertEqual("203.0.113.7", charge.customer.ip_address)
+        self.assertEqual("DE", charge.customer.ip_country)
+        self.assertEqual(24940, charge.customer.ip_asn)
+        self.assertEqual("Hetzner Online GmbH", charge.customer.ip_network)
         self.assertEqual("ada@example.com", charge.customer.email)
         self.assertEqual({}, charge.customer.metadata)
         self.assertEqual({"order_id": "1042"}, charge.metadata)
         self.assertEqual([], charge.refunds)
         self.assertIsNone(charge.checkout_url)
+
+    def test_a_delivery_without_the_ip_country_and_network_reads_them_as_none(self) -> None:
+        delivery = json.loads(payload("webhook_charge"))
+        for key in ("ip_country", "ip_asn", "ip_network"):
+            del delivery["data"]["charge"]["customer"][key]
+        raw = json.dumps(delivery)
+
+        charge = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET).charge
+
+        assert charge is not None
+        self.assertEqual("203.0.113.7", charge.customer.ip_address)
+        self.assertIsNone(charge.customer.ip_country)
+        self.assertIsNone(charge.customer.ip_asn)
+        self.assertIsNone(charge.customer.ip_network)
 
     def test_a_payment_detected_delivery_carries_the_transfer_that_was_seen(self) -> None:
         event = signed("webhook_payment_detected")

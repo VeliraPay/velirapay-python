@@ -137,6 +137,9 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("ada@example.com", charge.customer.email)
         self.assertEqual("Ada Lovelace", charge.customer.name)
         self.assertEqual("203.0.113.7", charge.customer.ip_address)
+        self.assertEqual("GB", charge.customer.ip_country)
+        self.assertEqual(2856, charge.customer.ip_asn)
+        self.assertEqual("British Telecommunications PLC", charge.customer.ip_network)
         self.assertTrue((charge.customer.user_agent or "").startswith("Mozilla/5.0 (Macintosh;"))
         self.assertEqual("cus_1042", charge.customer.reference)
         self.assertEqual("+44 20 7946 0958", charge.customer.phone)
@@ -275,6 +278,19 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("Ada Lovelace", charge.customer.name)
         self.assertIsNone(charge.customer.ip_address)
         self.assertEqual({}, charge.customer.metadata)
+
+    def test_a_customer_sent_without_the_ip_country_and_network_reads_them_as_none(self) -> None:
+        attributes = fixture("charge")
+        for key in ("ip_country", "ip_asn", "ip_network"):
+            del attributes["customer"][key]
+        self.http.json({"data": attributes})
+
+        charge = client(self.http).charges.retrieve("k3v9x2m7q8wz")
+
+        self.assertEqual("203.0.113.7", charge.customer.ip_address)
+        self.assertIsNone(charge.customer.ip_country)
+        self.assertIsNone(charge.customer.ip_asn)
+        self.assertIsNone(charge.customer.ip_network)
 
     def test_a_charge_built_without_a_customer_takes_it_from_the_older_fields(self) -> None:
         charge = Charge({"id": "k3v9x2m7q8wz", "customer_email": "ada@example.com", "customer_name": "Ada Lovelace"})
