@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 
 from velirapay import Coupon
 
@@ -57,6 +57,21 @@ class CouponTest(unittest.TestCase):
         self.assertEqual(
             {"code": "five", "amount_off": "5", "currency": "EUR", "min_amount": "20"}, body(self.http.last_request())
         )
+
+    def test_an_expiry_in_another_time_zone_is_sent_as_the_same_moment_in_utc(self) -> None:
+        self.http.json({"data": fixture("coupon")}, 201).json({"data": fixture("coupon")})
+        velirapay = client(self.http)
+        paris = timezone(timedelta(hours=1))
+
+        velirapay.coupons.create(
+            {"code": "spring10", "percent_off": "10", "expires_at": datetime(2026, 12, 31, 23, 59, 59, tzinfo=paris)}
+        )
+
+        self.assertEqual("2026-12-31T22:59:59+00:00", body(self.http.last_request())["expires_at"])
+
+        velirapay.coupons.update("SPRING10", {"expires_at": datetime(2027, 1, 31, 12, 0)})
+
+        self.assertEqual({"expires_at": "2027-01-31T12:00:00+00:00"}, body(self.http.last_request()))
 
     def test_a_coupon_can_expire_at_the_end_of_a_day(self) -> None:
         self.http.json({"data": fixture("coupon")}, 201)

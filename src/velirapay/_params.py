@@ -22,7 +22,7 @@ Metadata: TypeAlias = Mapping[str, str | int | float | bool | None]
 """Your own key-value data: up to 20 keys of at most 40 characters, each a string of at most 500 characters, a number, a boolean or None."""
 
 Moment: TypeAlias = str | datetime | date
-"""A moment, as ISO 8601 or a datetime with a time zone; a date is sent as YYYY-MM-DD."""
+"""A moment, as ISO 8601 or a datetime, sent in UTC, a datetime without a time zone being taken as UTC; a date is sent as YYYY-MM-DD."""
 
 
 class PageParams(TypedDict, total=False):

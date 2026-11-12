@@ -406,20 +406,27 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual(3, page.total)
         self.assertTrue(page.has_more())
 
-    def test_a_moment_keeps_its_own_offset(self) -> None:
+    def test_a_moment_in_another_time_zone_is_sent_as_the_same_moment_in_utc(self) -> None:
         self.http.json(list_response([]))
 
         client(self.http).charges.list(
-            {"created_from": datetime(2026, 10, 1, 9, 30, tzinfo=timezone(timedelta(hours=2)))}
+            {
+                "created_from": datetime(2026, 10, 1, 9, 30, tzinfo=timezone(timedelta(hours=2))),
+                "created_to": datetime(2026, 10, 31, 20, 0, 0, 250000, tzinfo=timezone(timedelta(hours=-5))),
+            }
         )
 
-        self.assertEqual({"created_from": "2026-10-01T09:30:00+02:00"}, query_of(self.http.last_request()))
+        self.assertEqual(
+            {"created_from": "2026-10-01T07:30:00+00:00", "created_to": "2026-11-01T01:00:00.250000+00:00"},
+            query_of(self.http.last_request()),
+        )
 
-    def test_a_moment_without_a_time_zone_is_refused_before_a_request_is_sent(self) -> None:
-        with self.assertRaisesRegex(InvalidArgumentError, "needs a time zone"):
-            client(self.http).charges.list({"created_from": datetime(2026, 10, 1)})
+    def test_a_moment_without_a_time_zone_is_taken_as_utc(self) -> None:
+        self.http.json(list_response([]))
 
-        self.assertEqual([], self.http.requests)
+        client(self.http).charges.list({"created_from": datetime(2026, 10, 1, 9, 30)})
+
+        self.assertEqual({"created_from": "2026-10-01T09:30:00+00:00"}, query_of(self.http.last_request()))
 
     def test_a_charge_is_canceled(self) -> None:
         self.http.json({"data": {**fixture("charge"), "status": "canceled"}})

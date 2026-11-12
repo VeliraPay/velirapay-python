@@ -13,7 +13,7 @@ import urllib.error
 import urllib.parse
 import uuid
 from collections.abc import Callable, Mapping, Sequence
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum
 
@@ -187,13 +187,10 @@ def encode_body(body: Mapping[str, object]) -> bytes:
 
 
 def format_datetime(value: datetime) -> str:
-    """Write a moment in ISO 8601, with its offset from UTC."""
-    if value.utcoffset() is None:
-        raise InvalidArgumentError(
-            "A datetime sent to the API needs a time zone, such as datetime(2026, 12, 31, tzinfo=timezone.utc)."
-        )
+    """Write a moment in ISO 8601, in UTC, which the API reads it in; a datetime without a time zone is taken as UTC."""
+    moment = value.replace(tzinfo=UTC) if value.utcoffset() is None else value.astimezone(UTC)
 
-    return value.isoformat()
+    return moment.isoformat()
 
 
 def _json_value(value: object) -> object:
