@@ -31,6 +31,10 @@ jobs:
             echo "The tag ${GITHUB_REF_NAME} does not match the version in pyproject.toml, ${version}." >&2
             exit 1
           fi
+          if ! grep -q "^## ${version} " CHANGELOG.md; then
+            echo "CHANGELOG.md has no section for ${version}, which the release notes are taken from." >&2
+            exit 1
+          fi
 
       - name: Install development tools
         run: python -m pip install --disable-pip-version-check --group dev
