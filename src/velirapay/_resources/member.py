@@ -29,7 +29,7 @@ class Member(ApiResource):
 
     @property
     def role(self) -> str | None:
-        """Either "owner", "admin", "finance", "support" or "viewer"."""
+        """One of the MemberRole values: "owner", "admin", "finance", "support" or "viewer"."""
         return nullable_string(self._attributes, "role")
 
     @property
@@ -55,7 +55,7 @@ class Invitation(ApiResource):
 
     @property
     def role(self) -> str:
-        """The role it gives once accepted: "admin", "finance", "support" or "viewer"."""
+        """The role it gives once accepted, one of the MemberRole values but "owner": "admin", "finance", "support" or "viewer"."""
         return string(self._attributes, "role")
 
     @property

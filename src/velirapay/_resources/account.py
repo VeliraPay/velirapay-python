@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .._enums import BusinessType, Industry, Mode, MonthlyVolume
+from .._enums import AccountType, BusinessType, Industry, Mode, MonthlyVolume, PlanName
 from ._base import (
     ApiResource,
     boolean,
@@ -27,7 +27,7 @@ class AccountCheckout:
     """How the account's checkout looks and what it falls back on."""
 
     appearance: str
-    """"auto", "light" or "dark"."""
+    """One of the CheckoutAppearance values: "auto", "light" or "dark"."""
 
     coin_order: list[str]
     """The order coins are listed in."""
@@ -79,7 +79,7 @@ class Account(ApiResource):
 
     @property
     def type(self) -> str:
-        """Either "personal" or "organization"."""
+        """One of the AccountType values: "personal" or "organization"."""
         return string(self._attributes, "type")
 
     @property
@@ -139,7 +139,7 @@ class Account(ApiResource):
 
     @property
     def default_currency(self) -> str:
-        """The currency new links and reports default to."""
+        """The currency new links and reports default to, one of the Currency values."""
         return string(self._attributes, "default_currency")
 
     @property
@@ -154,7 +154,7 @@ class Account(ApiResource):
 
     @property
     def plan(self) -> str:
-        """Either "free" or "pro"."""
+        """One of the PlanName values: "free" or "pro"."""
         return string(mapping(self._attributes, "plan"), "name", "free")
 
     @property
@@ -201,7 +201,7 @@ class Account(ApiResource):
 
     @property
     def checkout_locale(self) -> str | None:
-        """The fallback checkout language, or None for English."""
+        """The fallback checkout language, one of the CheckoutLocale values, or None for English."""
         return nullable_string(self._attributes, "checkout_locale")
 
     @property
@@ -231,11 +231,11 @@ class Account(ApiResource):
 
     def is_pro(self) -> bool:
         """Whether the account is on Pro, which keeps no fee."""
-        return self.plan == "pro"
+        return self.plan == PlanName.PRO
 
     def is_organization(self) -> bool:
         """Whether this is an organization rather than a personal account."""
-        return self.type == "organization"
+        return self.type == AccountType.ORGANIZATION
 
     def is_test_mode(self) -> bool:
         """Whether the key that fetched the account works in test mode."""

@@ -190,7 +190,7 @@ class PayoutAddress(ApiResource):
 
     @property
     def network(self) -> str:
-        """The network, such as "bitcoin" or "evm", which is also its id in the paths."""
+        """The network family, one of the AddressNetwork values such as "bitcoin" or "evm", which is also its id in the paths."""
         return string(self._attributes, "network")
 
     @property

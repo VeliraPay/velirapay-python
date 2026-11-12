@@ -1,7 +1,7 @@
 """The parameters each endpoint takes, under the names the API gives them.
 
 They are plain dicts: a key left out is not sent, and a key set to None is sent as null, which clears a field.
-Enum members can be passed wherever their values can.
+Enum members, such as Asset.BTC or Currency.EUR, can be passed wherever their values can, and so can plain strings.
 """
 
 from __future__ import annotations
@@ -10,6 +10,27 @@ from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Required, TypeAlias, TypedDict
+
+from ._enums import (
+    ActivityAction,
+    ApiKeyPermission,
+    Asset,
+    BusinessType,
+    ChargeStatus,
+    CheckoutAppearance,
+    CheckoutLocale,
+    Currency,
+    EventType,
+    Industry,
+    InvoiceStatus,
+    MemberRole,
+    Mode,
+    MonthlyVolume,
+    PaymentLinkStatus,
+    PayoutStatus,
+    PricingType,
+    WebhookDeliveryStatus,
+)
 
 Amount: TypeAlias = str | int | float | Decimal
 """An amount of money or of a coin, sent as a decimal string. Pass a str such as "49.90", or a Decimal, to keep every decimal.
@@ -55,9 +76,9 @@ class CustomFieldParams(TypedDict):
 class ChargeCreateParams(TypedDict, total=False):
     """A new charge. amount and currency are required unless a payment_link is given, which gives the currency, and the price when it is fixed."""
 
-    asset: Required[str]
+    asset: Required[Asset | str]
     amount: Amount
-    currency: str
+    currency: Currency | str
     payment_link: str | None
     customer: CustomerParams | None
     customer_email: str | None
@@ -74,8 +95,8 @@ class ChargeCreateParams(TypedDict, total=False):
 class ChargeListParams(PageParams, total=False):
     """Which charges to list. search takes part of a charge's code, customer email, customer name or description, or exactly its deposit address, a transaction hash, its payout hash or the customer's IP address."""
 
-    status: str
-    asset: str
+    status: ChargeStatus | str
+    asset: Asset | str
     payment_link: str
     search: str
     created_from: Moment
@@ -109,7 +130,7 @@ class InvoiceCreateParams(TypedDict, total=False):
 
     customer_name: Required[str]
     customer_email: Required[str]
-    currency: Required[str]
+    currency: Required[Currency | str]
     amount: Amount
     items: Sequence[InvoiceItemParams]
     memo: str | None
@@ -120,7 +141,7 @@ class InvoiceCreateParams(TypedDict, total=False):
 class InvoiceListParams(PageParams, total=False):
     """Which invoices to list."""
 
-    status: str
+    status: InvoiceStatus | str
     search: str
     overdue: bool
 
@@ -138,7 +159,7 @@ class _PaymentLinkOptions(TypedDict, total=False):
     suggested_amounts: Sequence[Amount] | None
     min_amount: Amount | None
     max_amount: Amount | None
-    accepted_assets: Sequence[str] | None
+    accepted_assets: Sequence[Asset | str] | None
     success_url: str | None
     cancel_url: str | None
     collect_name: bool
@@ -153,22 +174,22 @@ class PaymentLinkCreateParams(_PaymentLinkOptions):
     """A new payment link. amount is the price of a fixed one, and None for accepted_assets takes every coin the account takes."""
 
     title: str
-    pricing_type: str
-    currency: str
+    pricing_type: PricingType | str
+    currency: Currency | str
 
 
 class PaymentLinkUpdateParams(_PaymentLinkOptions, total=False):
     """What to change about a payment link."""
 
     title: str
-    pricing_type: str
-    currency: str
+    pricing_type: PricingType | str
+    currency: Currency | str
 
 
 class PaymentLinkListParams(PageParams, total=False):
     """Which payment links to list."""
 
-    status: str
+    status: PaymentLinkStatus | str
     search: str
 
 
@@ -178,7 +199,7 @@ class CouponCreateParams(TypedDict, total=False):
     code: Required[str]
     percent_off: Amount | None
     amount_off: Amount | None
-    currency: str | None
+    currency: Currency | str | None
     min_amount: Amount | None
     max_redemptions: int | None
     once_per_customer: bool
@@ -206,15 +227,15 @@ class CouponListParams(PageParams, total=False):
 class PayoutListParams(PageParams, total=False):
     """Which payouts to list. search takes a charge id or a transaction hash."""
 
-    status: str
-    asset: str
+    status: PayoutStatus | str
+    asset: Asset | str
     search: str
 
 
 class EventListParams(PageParams, total=False):
     """Which events to list. charge and invoice take an id."""
 
-    type: str
+    type: EventType | str
     charge: str
     invoice: str
 
@@ -228,25 +249,25 @@ class WebhookEndpointCreateParams(_WebhookEndpointOptions):
     """A new webhook endpoint, at a public https:// URL."""
 
     url: str
-    events: Sequence[str]
+    events: Sequence[EventType | str]
 
 
 class WebhookEndpointUpdateParams(_WebhookEndpointOptions, total=False):
     """What to change about a webhook endpoint. A new url is verified again."""
 
     url: str
-    events: Sequence[str]
+    events: Sequence[EventType | str]
 
 
 class WebhookDeliveryListParams(PageParams, total=False):
-    """Which deliveries to list. status is "pending", "succeeded" or "failed"."""
+    """Which deliveries to list: status is a WebhookDeliveryStatus, such as "failed", and event an EventType."""
 
-    status: str
-    event: str
+    status: WebhookDeliveryStatus | str
+    event: EventType | str
 
 
 class _ApiKeyOptions(TypedDict, total=False):
-    permissions: Sequence[str] | None
+    permissions: Sequence[ApiKeyPermission | str] | None
     allowed_ips: Sequence[str] | None
 
 
@@ -263,16 +284,16 @@ class ApiKeyUpdateParams(_ApiKeyOptions, total=False):
 
 
 class MemberUpdateParams(TypedDict):
-    """A member's new role: "admin", "finance", "support" or "viewer"."""
+    """A member's new role: a MemberRole other than OWNER, such as "finance"."""
 
-    role: str
+    role: MemberRole | str
 
 
 class InvitationCreateParams(TypedDict):
-    """Who to invite, and as an "admin", "finance", "support" or "viewer"."""
+    """Who to invite, and in which role: a MemberRole other than OWNER, such as "admin"."""
 
     email: str
-    role: str
+    role: MemberRole | str
 
 
 ActivityListParams = TypedDict(
@@ -280,12 +301,12 @@ ActivityListParams = TypedDict(
     {
         "page": int,
         "per_page": int,
-        "action": str,
+        "action": ActivityAction | str,
         "person": str,
         "q": str,
         "from": str | date,
         "to": str | date,
-        "network": str,
+        "network": Mode | str,
     },
     total=False,
 )
@@ -295,7 +316,7 @@ ActivityListParams = TypedDict(
 class AssetListParams(TypedDict, total=False):
     """The currency of the prices; the account's default when left out."""
 
-    currency: str
+    currency: Currency | str
 
 
 class PayoutAddressUpdateParams(TypedDict):
@@ -307,15 +328,15 @@ class PayoutAddressUpdateParams(TypedDict):
 class ProPaymentParams(TypedDict):
     """The coin to pay for Pro in."""
 
-    asset: str
+    asset: Asset | str
 
 
 class AccountCheckoutParams(TypedDict, total=False):
     """How the checkout looks and what it falls back on."""
 
-    appearance: str
-    coin_order: Sequence[str]
-    default_coin: str | None
+    appearance: CheckoutAppearance | str
+    coin_order: Sequence[Asset | str]
+    default_coin: Asset | str | None
     success_url: str | None
     cancel_url: str | None
     success_message: str | None
@@ -344,14 +365,14 @@ class AddressParams(TypedDict, total=False):
 class AccountBusinessParams(TypedDict, total=False):
     """Who runs the account and what it sells."""
 
-    type: str | None
+    type: BusinessType | str | None
     legal_name: str | None
     registration_number: str | None
     tax_id: str | None
     address: AddressParams
-    industry: str | None
+    industry: Industry | str | None
     product_description: str | None
-    monthly_volume: str | None
+    monthly_volume: MonthlyVolume | str | None
     phone: str | None
 
 
@@ -372,10 +393,10 @@ class AccountUpdateParams(TypedDict, total=False):
 
 
 class PaymentSettingsUpdateParams(TypedDict, total=False):
-    """What to change about how payments are taken. checkout_locale is "en", "fr", "de", "es", "tr", "pt", "ru" or "ar", or None."""
+    """What to change about how payments are taken. checkout_locale is a CheckoutLocale, such as "fr", or None."""
 
-    default_currency: str
+    default_currency: Currency | str
     underpayment_tolerance: Amount
     overpayment_threshold: Amount
-    checkout_locale: str | None
+    checkout_locale: CheckoutLocale | str | None
     invoice_reminders: bool

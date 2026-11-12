@@ -165,3 +165,146 @@ class ApiKeyPermission(StrEnum):
     MEMBERS_READ = "members:read"
     MEMBERS_WRITE = "members:write"
     BILLING_WRITE = "billing:write"
+
+
+class Currency(StrEnum):
+    """The currencies prices are set and paid in."""
+
+    USD = "USD"
+    EUR = "EUR"
+    GBP = "GBP"
+    CAD = "CAD"
+    AUD = "AUD"
+    CHF = "CHF"
+    TRY = "TRY"
+
+
+class MemberRole(StrEnum):
+    """What a member of an account may do. OWNER only appears in answers: invitations and role changes take the other four."""
+
+    OWNER = "owner"
+    ADMIN = "admin"
+    FINANCE = "finance"
+    SUPPORT = "support"
+    VIEWER = "viewer"
+
+
+class AddressNetwork(StrEnum):
+    """A network family with a payout address of its own, as payout_addresses.update() and delete() name it."""
+
+    BITCOIN = "bitcoin"
+    LITECOIN = "litecoin"
+    DOGECOIN = "dogecoin"
+    BITCOIN_CASH = "bitcoincash"
+    EVM = "evm"
+    BSC = "bsc"
+    BASE = "base"
+    ARBITRUM = "arbitrum"
+    POLYGON = "polygon"
+    TRON = "tron"
+    MONERO = "monero"
+    SOLANA = "solana"
+    LIGHTNING = "lightning"
+
+
+class CheckoutAppearance(StrEnum):
+    """Whether the checkout is light, dark or follows the customer's device."""
+
+    AUTO = "auto"
+    LIGHT = "light"
+    DARK = "dark"
+
+
+class WebhookDeliveryStatus(StrEnum):
+    """Where a webhook delivery has got to."""
+
+    PENDING = "pending"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class PlanName(StrEnum):
+    """The plan an account is on."""
+
+    FREE = "free"
+    PRO = "pro"
+
+
+class AccountType(StrEnum):
+    """Whether an account is one person's or an organization."""
+
+    PERSONAL = "personal"
+    ORGANIZATION = "organization"
+
+
+class CheckoutLocale(StrEnum):
+    """The languages the checkout speaks."""
+
+    EN = "en"
+    FR = "fr"
+    DE = "de"
+    ES = "es"
+    TR = "tr"
+    PT = "pt"
+    RU = "ru"
+    AR = "ar"
+
+
+class ActivityAction(StrEnum):
+    """What an entry of the activity log records. The API adds actions over time, so an entry can hold one this version does not know."""
+
+    WALLETS_CHANGED = "wallets.changed"
+    WALLETS_API_ACCESS_CHANGED = "wallets.api_access_changed"
+    TEAM_SECOND_FACTOR_REQUIREMENT_CHANGED = "team.second_factor_requirement_changed"
+    PAYMENT_SETTINGS_UPDATED = "payment_settings.updated"
+    PROFILE_UPDATED = "profile.updated"
+    BUSINESS_DETAILS_UPDATED = "business_details.updated"
+    API_KEY_CREATED = "api_key.created"
+    API_KEY_UPDATED = "api_key.updated"
+    API_KEY_REVOKED = "api_key.revoked"
+    WEBHOOK_CREATED = "webhook.created"
+    WEBHOOK_UPDATED = "webhook.updated"
+    WEBHOOK_DELETED = "webhook.deleted"
+    WEBHOOK_SECRET_ROTATED = "webhook.secret_rotated"
+    MEMBER_INVITED = "member.invited"
+    MEMBER_JOINED = "member.joined"
+    MEMBER_ROLE_CHANGED = "member.role_changed"
+    MEMBER_REMOVED = "member.removed"
+    PAYMENT_LINK_CREATED = "payment_link.created"
+    PAYMENT_LINK_UPDATED = "payment_link.updated"
+    PAYMENT_LINK_ARCHIVED = "payment_link.archived"
+    PAYMENT_LINK_RESTORED = "payment_link.restored"
+    MEMBER_INVITATION_CANCELED = "member.invitation_canceled"
+    CHARGE_PAYMENT_REQUESTED = "charge.payment_requested"
+    WEBHOOK_DISABLED = "webhook.disabled"
+    CHARGE_CANCELED = "charge.canceled"
+    CHARGE_ACCEPTED = "charge.accepted"
+    REFUND_RECORDED = "refund.recorded"
+    INVOICE_VOIDED = "invoice.voided"
+    PLAN_PAYMENT_STARTED = "plan.payment_started"
+    PLAN_SUBSCRIPTION_CANCELED = "plan.subscription_canceled"
+    PLAN_SUBSCRIPTION_RESUMED = "plan.subscription_resumed"
+    AUTH_SIGNED_IN = "auth.signed_in"
+    AUTH_SIGN_IN_FAILED = "auth.sign_in_failed"
+    AUTH_PASSWORD_CHANGED = "auth.password_changed"
+    AUTH_TWO_FACTOR_ENABLED = "auth.two_factor_enabled"
+    AUTH_TWO_FACTOR_DISABLED = "auth.two_factor_disabled"
+    AUTH_SIGNED_OUT_ELSEWHERE = "auth.signed_out_elsewhere"
+    AUTH_TWO_FACTOR_FAILED = "auth.two_factor_failed"
+    AUTH_EMAIL_CHANGED = "auth.email_changed"
+    AUTH_PASSKEY_ADDED = "auth.passkey_added"
+    AUTH_PASSKEY_REMOVED = "auth.passkey_removed"
+    COUPON_CREATED = "coupon.created"
+    COUPON_UPDATED = "coupon.updated"
+    COUPON_DELETED = "coupon.deleted"
+    AUTH_APP_CONNECTED = "auth.app_connected"
+    AUTH_APP_DISCONNECTED = "auth.app_disconnected"
+    CHAT_CONNECTED = "chat.connected"
+    CHAT_UPDATED = "chat.updated"
+    CHAT_REMOVED = "chat.removed"
+    CHAT_DISABLED = "chat.disabled"
+    SANCTIONS_MATCHED = "sanctions.matched"
+    SANCTIONS_ACCEPTED = "sanctions.accepted"
+    SANCTIONS_RETURN_REQUESTED = "sanctions.return_requested"
+    AUTH_SOCIAL_CONNECTED = "auth.social_connected"
+    AUTH_SOCIAL_DISCONNECTED = "auth.social_disconnected"

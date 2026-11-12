@@ -5,6 +5,7 @@ from __future__ import annotations
 import builtins
 from collections.abc import Iterator
 
+from .._enums import AddressNetwork
 from .._page import Page
 from .._params import PayoutAddressUpdateParams, PayoutListParams
 from .._resources.payout import Payout, PayoutAddress, PayoutSummary
@@ -43,11 +44,11 @@ class PayoutAddressService(Service):
         return [PayoutAddress(address) for address in objects(self._respond("GET", "/v1/payout-addresses"))]
 
     def update(
-        self, network: str, params: PayoutAddressUpdateParams, *, idempotency_key: str | None = None
+        self, network: AddressNetwork | str, params: PayoutAddressUpdateParams, *, idempotency_key: str | None = None
     ) -> PayoutAddress:
-        """Point the payouts of one network, such as "bitcoin" or "evm", at an address."""
+        """Point the payouts of one network family, an AddressNetwork such as "bitcoin" or "evm", at an address."""
         return PayoutAddress(self._request("PUT", path("/v1/payout-addresses/%s", network), params, idempotency_key))
 
-    def delete(self, network: str, *, idempotency_key: str | None = None) -> PayoutAddress:
-        """Remove the address of one network, so its payouts wait for a new one."""
+    def delete(self, network: AddressNetwork | str, *, idempotency_key: str | None = None) -> PayoutAddress:
+        """Remove the address of one network family, an AddressNetwork, so its payouts wait for a new one."""
         return PayoutAddress(self._request("DELETE", path("/v1/payout-addresses/%s", network), None, idempotency_key))

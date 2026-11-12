@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
+from .._enums import WebhookDeliveryStatus
 from ._base import (
     ApiResource,
     boolean,
@@ -129,7 +130,7 @@ class WebhookDelivery(ApiResource):
 
     @property
     def status(self) -> str:
-        """Either "pending", "succeeded" or "failed"."""
+        """One of the WebhookDeliveryStatus values: "pending", "succeeded" or "failed"."""
         return string(self._attributes, "status")
 
     @property
@@ -186,7 +187,7 @@ class WebhookDelivery(ApiResource):
 
     def succeeded(self) -> bool:
         """Whether the endpoint accepted the delivery."""
-        return self.status == "succeeded"
+        return self.status == WebhookDeliveryStatus.SUCCEEDED
 
 
 class WebhookDeliveryAttempt(ApiResource):

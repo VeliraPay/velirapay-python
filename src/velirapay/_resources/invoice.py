@@ -70,7 +70,7 @@ class Invoice(ApiResource):
 
     @property
     def currency(self) -> str:
-        """The fiat currency, such as "USD"."""
+        """The fiat currency, one of the Currency values such as "USD"."""
         return string(self._attributes, "currency")
 
     @property

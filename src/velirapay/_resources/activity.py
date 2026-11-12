@@ -20,7 +20,7 @@ class Activity(ApiResource):
 
     @property
     def action(self) -> str:
-        """What was done, such as "api_key.created"."""
+        """What was done, one of the ActivityAction values such as "api_key.created"; the API adds actions over time."""
         return string(self._attributes, "action")
 
     @property
