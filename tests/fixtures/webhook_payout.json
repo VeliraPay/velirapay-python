@@ -1,0 +1,51 @@
+{
+    "id": "0199f0c2-7a1e-7c44-9d3a-2b8f1a2b3c4d",
+    "event_id": "0199f0c2-7a1d-7f12-8a6b-5e4d3c2b1a09",
+    "event": "payout.confirmed",
+    "mode": "live",
+    "created_at": "2026-09-20T10:41:03.000000Z",
+    "data": {
+        "charge": {
+            "code": "k3v9x2m7q8wz",
+            "status": "paid",
+            "fiat_amount": "150.00",
+            "fiat_currency": "EUR",
+            "asset": "BTC",
+            "asset_amount": "0.002500000000000000",
+            "received_amount": "0.002500000000000000",
+            "deposit_address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+            "transactions": [],
+            "metadata": {
+                "order_id": "1042"
+            },
+            "created_at": "2026-09-20T09:55:00.000000Z",
+            "expires_at": "2026-09-20T10:25:00.000000Z",
+            "paid_at": "2026-09-20T10:05:41.000000Z"
+        },
+        "payout": {
+            "id": "k3v9x2m7q8wz",
+            "object": "payout",
+            "charge": "k3v9x2m7q8wz",
+            "status": "sent",
+            "asset": "BTC",
+            "gross_amount": "0.0025",
+            "fee_percent": "3",
+            "fee_amount": "0.000075",
+            "fee_fiat_amount": "4.50",
+            "fiat_currency": "EUR",
+            "exchange_rate": "60000",
+            "net_amount": "0.002425",
+            "network_fee": "0.0000044",
+            "sent_amount": "0.002425",
+            "payout_address": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+            "payout_txid": "cc9a3e0b5629235194a6174d805c55df5554c94e2b4de8dc584db2091cc5cacf",
+            "explorer_url": "https://mempool.space/tx/cc9a3e0b5629235194a6174d805c55df5554c94e2b4de8dc584db2091cc5cacf",
+            "attempts": 1,
+            "last_error": null,
+            "next_attempt_at": null,
+            "sent_at": "2026-09-20T10:06:12.000000Z",
+            "confirmed_at": "2026-09-20T10:41:02.000000Z",
+            "created_at": "2026-09-20T10:05:41.000000Z"
+        }
+    }
+}

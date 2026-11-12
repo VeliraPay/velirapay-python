@@ -1,0 +1,44 @@
+{
+    "data": {
+        "id": "acme",
+        "object": "account",
+        "type": "organization",
+        "name": "Acme",
+        "display_name": "Acme Inc.",
+        "logo_url": null,
+        "website_url": "https://acme.example",
+        "support_email": "billing@acme.example",
+        "support_phone": "+442071234567",
+        "brand_color": "#4f46e5",
+        "business": {
+            "type": "company",
+            "legal_name": "Acme Holdings Ltd",
+            "registration_number": "12345678",
+            "tax_id": "GB123456789",
+            "address": {
+                "line1": "1 Example Street",
+                "line2": null,
+                "city": "London",
+                "postal_code": "EC1A 1BB",
+                "state": null,
+                "country": "GB"
+            },
+            "industry": "software",
+            "product_description": "Project management software, billed monthly.",
+            "monthly_volume": "10k_50k",
+            "phone": "+442071234500"
+        },
+        "default_currency": "EUR",
+        "underpayment_tolerance": "1",
+        "overpayment_threshold": "3",
+        "created_at": "2026-01-15T10:00:00.000000Z"
+    },
+    "meta": {
+        "accepted_assets": [
+            "BTC",
+            "ETH",
+            "USDC"
+        ],
+        "mode": "test"
+    }
+}

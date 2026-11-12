@@ -1,0 +1,68 @@
+{
+    "id": "7a2d4c1e-3b5f-4e6a-8c9d-0f1e2d3c4b5a",
+    "event_id": "8c3e5d2f-4a6b-4f7c-9d0e-1a2b3c4d5e6f",
+    "event": "charge.payment_detected",
+    "mode": "live",
+    "created_at": "2026-09-20T09:58:13.000000Z",
+    "data": {
+        "charge": {
+            "code": "k3v9x2m7q8wz",
+            "status": "pending",
+            "fiat_amount": "150.00",
+            "fiat_currency": "EUR",
+            "asset": "BTC",
+            "asset_amount": "0.002500000000000000",
+            "received_amount": null,
+            "remaining_amount": "0.002500000000000000",
+            "overpaid": false,
+            "refunded_amount": "0",
+            "exchange_rate": "60000.000000000000000000",
+            "deposit_address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+            "transactions": [
+                {
+                    "txid": "7d1c5e9a3b2f8e6d4c0a9b8e7f6d5c4b3a2918f7e6d5c4b3a29180f7e6d5c4b3",
+                    "amount": "0.002500000000000000",
+                    "confirmations": 0,
+                    "required_confirmations": 2,
+                    "credited": false,
+                    "explorer_url": "https://mempool.space/tx/7d1c5e9a3b2f8e6d4c0a9b8e7f6d5c4b3a2918f7e6d5c4b3a29180f7e6d5c4b3",
+                    "seen_at": "2026-09-20T09:58:12.000000Z"
+                }
+            ],
+            "customer_email": "ada@example.com",
+            "customer_name": null,
+            "customer": {
+                "email": "ada@example.com",
+                "name": null,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15",
+                "reference": null,
+                "phone": null,
+                "country": null,
+                "metadata": []
+            },
+            "custom_fields": [],
+            "description": "Pro plan, 1 year",
+            "metadata": {
+                "order_id": "1042"
+            },
+            "payment_link": {
+                "code": "p4n8r2t6y1ua",
+                "title": "Pro plan"
+            },
+            "invoice": null,
+            "created_at": "2026-09-20T09:55:00.000000Z",
+            "expires_at": "2026-09-20T10:25:00.000000Z",
+            "paid_at": null
+        },
+        "transaction": {
+            "txid": "7d1c5e9a3b2f8e6d4c0a9b8e7f6d5c4b3a2918f7e6d5c4b3a29180f7e6d5c4b3",
+            "amount": "0.002500000000000000",
+            "confirmations": 0,
+            "required_confirmations": 2,
+            "credited": false,
+            "explorer_url": "https://mempool.space/tx/7d1c5e9a3b2f8e6d4c0a9b8e7f6d5c4b3a2918f7e6d5c4b3a29180f7e6d5c4b3",
+            "seen_at": "2026-09-20T09:58:12.000000Z"
+        }
+    }
+}

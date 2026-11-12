@@ -1,0 +1,41 @@
+{
+    "id": "w7c2h5j9d3kx",
+    "object": "invoice",
+    "number": "INV-0042",
+    "status": "open",
+    "overdue": false,
+    "customer_name": "Grace Hopper",
+    "customer_email": "grace@example.com",
+    "memo": "Thanks for your business.",
+    "amount": "1250.00",
+    "currency": "USD",
+    "items": [
+        {
+            "description": "Consulting",
+            "quantity": "10",
+            "unit_amount": "100.00",
+            "total": "1000.00"
+        },
+        {
+            "description": "Hosting",
+            "quantity": "2.5",
+            "unit_amount": "100.00",
+            "total": "250.00"
+        }
+    ],
+    "due_at": "2026-10-15",
+    "hosted_url": "https://velirapay.com/i/w7c2h5j9d3kx",
+    "document_url": "https://velirapay.com/i/w7c2h5j9d3kx/document",
+    "charges": [
+        {
+            "id": "m2q7w4e9r1ty",
+            "status": "expired",
+            "asset": "ETH"
+        }
+    ],
+    "sent_at": "2026-09-21T08:00:00.000000Z",
+    "viewed_at": null,
+    "paid_at": null,
+    "voided_at": null,
+    "created_at": "2026-09-21T07:59:30.000000Z"
+}

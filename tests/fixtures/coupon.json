@@ -1,0 +1,19 @@
+{
+    "id": "SPRING10",
+    "object": "coupon",
+    "code": "SPRING10",
+    "percent_off": "10.00",
+    "amount_off": null,
+    "currency": null,
+    "min_amount": null,
+    "max_redemptions": 100,
+    "times_redeemed": 4,
+    "once_per_customer": true,
+    "payment_links": [
+        "p4n8r2t6y1ua"
+    ],
+    "active": true,
+    "expires_at": "2026-12-31T23:59:59.000000Z",
+    "created_at": "2026-10-15T09:00:00.000000Z",
+    "updated_at": "2026-10-15T09:30:00.000000Z"
+}

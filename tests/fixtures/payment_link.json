@@ -1,0 +1,36 @@
+{
+    "id": "p4n8r2t6y1ua",
+    "object": "payment_link",
+    "title": "Tip jar",
+    "description": "Support the project.",
+    "pricing_type": "open",
+    "amount": null,
+    "suggested_amounts": [
+        "5.00",
+        "10.00",
+        "25.00"
+    ],
+    "min_amount": "1.00",
+    "max_amount": "500.00",
+    "currency": "USD",
+    "accepted_assets": null,
+    "status": "active",
+    "success_url": "https://example.com/thanks",
+    "cancel_url": null,
+    "collect_name": true,
+    "require_email": false,
+    "custom_fields": [
+        {
+            "label": "Message",
+            "required": false
+        }
+    ],
+    "success_message": "Thank you!",
+    "expires_at": null,
+    "max_payments": 100,
+    "accepting_payments": true,
+    "views_count": 12,
+    "checkout_url": "https://velirapay.com/pay/p4n8r2t6y1ua",
+    "created_at": "2026-09-01T12:00:00.000000Z",
+    "updated_at": "2026-09-02T08:30:00.000000Z"
+}
