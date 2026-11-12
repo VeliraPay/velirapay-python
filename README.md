@@ -40,6 +40,7 @@ To charge a customer, create a charge with what you already know about them, and
 import os
 
 from flask import Flask, redirect
+from flask.typing import ResponseReturnValue
 from velirapay import VeliraPayClient
 
 app = Flask(__name__)
@@ -47,7 +48,7 @@ velirapay = VeliraPayClient(os.environ["VELIRAPAY_API_KEY"])
 
 
 @app.post("/orders/1042/pay")
-def pay():
+def pay() -> ResponseReturnValue:
     charge = velirapay.charges.create(
         {
             "amount": "49.90",
@@ -60,6 +61,8 @@ def pay():
         idempotency_key="order-1042",
     )
 
+    assert charge.checkout_url is not None
+
     return redirect(charge.checkout_url, code=303)
 ```
 
@@ -67,7 +70,7 @@ They pay there, and VeliraPay tells your server about it with a [webhook](#verif
 
 Parameters are a dict under the names the API gives them, as the [API reference](https://velirapay.com/docs) lists them. A key you leave out is not sent and a key set to `None` is sent as `null`, which is how a field is cleared; that difference is why they are not keyword arguments, and so is `from`, a Python keyword the activity log filters by. They are typed (`ChargeCreateParams` and so on), so your editor and type checker know every key. Enum members such as `Asset.BTC` can stand in for their values, and a `datetime` with a time zone, a `date` or a `Decimal` is sent the way the API expects.
 
-Objects come back with typed attributes: `charge.checkout_url`, `charge.asset_amount`, `charge.customer.ip_address`. Amounts are always strings, such as `"49.90"`, never floats, so no precision is lost; `Decimal(charge.asset_amount)` does arithmetic with them. Times are `datetime` objects in UTC, and a day such as `invoice.due_at` is a `date`. `checkout_url` is typed `str | None` because the charges in webhooks leave it out; a charge the API answers with always has one.
+Objects come back with typed attributes: `charge.checkout_url`, `charge.asset_amount`, `charge.customer.ip_address`. Amounts are always strings, such as `"49.90"`, never floats, so no precision is lost; `Decimal(charge.asset_amount)` does arithmetic with them. Times are `datetime` objects in UTC, and a day such as `invoice.due_at` is a `date`. `checkout_url` is typed `str | None` because the charges in webhooks leave it out; a charge the API answers with always has one, which the `assert` tells your type checker.
 
 A charge from your server comes from your server rather than the customer, so pass what you know about them as `customer` (`email`, `name`, `ip_address`, `user_agent`, `reference`, `phone`, `country` and `metadata`); it helps you spot fraud before you ship anything. `charge.customer` reads it back.
 
@@ -79,13 +82,14 @@ Add an endpoint in the dashboard under **Developers → Webhooks** and copy its 
 import os
 
 from flask import Flask, request
+from flask.typing import ResponseReturnValue
 from velirapay import SignatureVerificationError, Webhook
 
 app = Flask(__name__)
 
 
 @app.post("/webhooks/velirapay")
-def velirapay_webhook():
+def velirapay_webhook() -> ResponseReturnValue:
     try:
         event = Webhook.construct_event(
             request.get_data(),
@@ -96,14 +100,16 @@ def velirapay_webhook():
         return "", 400
 
     # Sent when the endpoint is added or moved: it receives nothing else until it answers.
-    if event.is_verification():
-        return event.challenge_response(), 200, {"Content-Type": "application/json"}
+    challenge = event.challenge_response()
+
+    if challenge is not None:
+        return challenge, 200, {"Content-Type": "application/json"}
 
     # The same event can arrive more than once: remember this key, and skip the events you have handled.
     key = event.event_id or event.id
 
-    if event.is_type("charge.paid"):
-        ...  # Fulfil the order event.charge.metadata["order_id"].
+    if event.is_type("charge.paid") and event.charge is not None:
+        ...  # Fulfil the order event.charge.metadata.get("order_id"), None for a charge made without one.
 
     return "", 200
 ```
@@ -130,11 +136,13 @@ async def velirapay_webhook(request: Request) -> Response:
     except SignatureVerificationError:
         return Response(status_code=400)
 
-    if event.is_verification():
-        return Response(event.challenge_response(), media_type="application/json")
+    challenge = event.challenge_response()
 
-    if event.is_type("charge.paid"):
-        ...  # Fulfil the order event.charge.metadata["order_id"].
+    if challenge is not None:
+        return Response(challenge, media_type="application/json")
+
+    if event.is_type("charge.paid") and event.charge is not None:
+        ...  # Fulfil the order event.charge.metadata.get("order_id"), None for a charge made without one.
 
     return Response(status_code=200)
 ```
