@@ -39,6 +39,9 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual("k3v9x2m7q8wz", charge.id)
         self.assertTrue(charge.is_paid())
         self.assertEqual("p4n8r2t6y1ua", charge.payment_link)
+        self.assertEqual("Pro plan", charge.payment_link_title)
+        self.assertIsNone(charge.invoice)
+        self.assertIsNone(charge.invoice_number)
         self.assertEqual("0.002500000000000000", charge.asset_amount)
         self.assertEqual(2, charge.transactions[0].confirmations)
         self.assertEqual(2, charge.transactions[0].required_confirmations)
@@ -85,6 +88,20 @@ class WebhookTest(unittest.TestCase):
 
     def test_only_a_payout_delivery_carries_a_payout(self) -> None:
         self.assertIsNone(signed("webhook_charge").payout)
+
+    def test_a_delivery_about_a_charge_paying_an_invoice_names_the_invoice(self) -> None:
+        delivery = json.loads(payload("webhook_charge"))
+        delivery["data"]["charge"]["payment_link"] = None
+        delivery["data"]["charge"]["invoice"] = {"code": "w7c2h5j9d3kx", "number": "INV-0042"}
+        raw = json.dumps(delivery)
+
+        charge = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET).charge
+
+        assert charge is not None
+        self.assertEqual("w7c2h5j9d3kx", charge.invoice)
+        self.assertEqual("INV-0042", charge.invoice_number)
+        self.assertIsNone(charge.payment_link)
+        self.assertIsNone(charge.payment_link_title)
 
     def test_a_signed_invoice_delivery_is_parsed(self) -> None:
         event = signed("webhook_invoice")

@@ -13,6 +13,7 @@ from ._base import (
     integer,
     mapping,
     nullable_string,
+    record,
     records,
     reference,
     string,
@@ -63,9 +64,23 @@ class Charge(ApiResource):
         return reference(self._attributes, "payment_link")
 
     @property
+    def payment_link_title(self) -> str | None:
+        """The title of the payment link the charge was made through, which webhooks carry; None in the API's answers, which give the code alone."""
+        link = record(self._attributes, "payment_link")
+
+        return None if link is None else nullable_string(link, "title")
+
+    @property
     def invoice(self) -> str | None:
         """The code of the invoice the charge pays."""
         return reference(self._attributes, "invoice")
+
+    @property
+    def invoice_number(self) -> str | None:
+        """The number of the invoice the charge pays, which webhooks carry; None in the API's answers, which give the code alone."""
+        invoice = record(self._attributes, "invoice")
+
+        return None if invoice is None else nullable_string(invoice, "number")
 
     @property
     def description(self) -> str | None:
