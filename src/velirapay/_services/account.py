@@ -5,7 +5,7 @@ from __future__ import annotations
 from .._http import ApiResponse
 from .._params import AccountUpdateParams, PaymentSettingsUpdateParams
 from .._resources.account import Account
-from ._base import Service, data, meta
+from ._base import Service, amounts, data, meta
 
 
 class AccountService(Service):
@@ -25,7 +25,9 @@ class AccountService(Service):
         self, params: PaymentSettingsUpdateParams, *, idempotency_key: str | None = None
     ) -> Account:
         """Change the default currency, the payment tolerances, the checkout language or invoice reminders. Needs payment_settings:write."""
-        return _account(self._respond("PATCH", "/v1/payment-settings", params, idempotency_key))
+        body = amounts(params, "underpayment_tolerance", "overpayment_threshold")
+
+        return _account(self._respond("PATCH", "/v1/payment-settings", body, idempotency_key))
 
 
 def _account(response: ApiResponse) -> Account:

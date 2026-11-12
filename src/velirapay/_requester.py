@@ -253,6 +253,30 @@ def _append_query(pairs: list[tuple[str, str]], key: str, value: object) -> None
         raise InvalidArgumentError(f"The query parameter {key} cannot be sent as a {type(value).__name__}.")
 
 
+def format_amount(value: object) -> object:
+    """Write an amount given as a number as a decimal string without an exponent, leaving anything else as it is.
+
+    A float is rounded to 14 significant digits first, the precision the API reads a JSON number with, so 0.1 + 0.2 is
+    sent as "0.3" and 0.00005 as "0.00005" rather than as the "5e-05" the API refuses.
+    """
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise InvalidArgumentError(f"The amount {value} cannot be sent.")
+
+        return format(Decimal(format(value, ".14g")), "f")
+
+    if isinstance(value, int):
+        return str(value)
+
+    if isinstance(value, Decimal):
+        return _format_decimal(value)
+
+    return value
+
+
 def _format_decimal(value: Decimal) -> str:
     """Write a Decimal with every digit it has and no exponent."""
     if not value.is_finite():

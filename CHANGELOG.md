@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Amounts given as numbers are sent as decimal strings without an exponent: the amounts of charges, refunds, simulated payments, invoices and their items, payment links and coupons, and the payment tolerances. A float is rounded to 14 significant digits first, the precision the API reads a number with, so `0.00005` is sent as `"0.00005"` rather than as the `5e-05` the API refused, and `0.1 + 0.2` as `"0.3"`. A float that is not a number, or is infinite, raises an `InvalidArgumentError` before anything is sent. Metadata is sent as it is given.
+
 ## 0.1.0 - 2026-11-12
 
 The first version, covering what the PHP library covers as of its 0.6.5:

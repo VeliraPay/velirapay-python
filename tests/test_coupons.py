@@ -44,6 +44,20 @@ class CouponTest(unittest.TestCase):
         )
         self.assertEqual("SPRING10", coupon.code)
 
+    def test_the_discount_and_minimum_of_a_coupon_are_sent_as_decimal_strings(self) -> None:
+        self.http.json({"data": fixture("coupon")}, 201).json({"data": fixture("coupon")}, 201)
+        velirapay = client(self.http)
+
+        velirapay.coupons.create({"code": "spring10", "percent_off": 12.5})
+
+        self.assertEqual({"code": "spring10", "percent_off": "12.5"}, body(self.http.last_request()))
+
+        velirapay.coupons.create({"code": "five", "amount_off": 5, "currency": "EUR", "min_amount": 20.0})
+
+        self.assertEqual(
+            {"code": "five", "amount_off": "5", "currency": "EUR", "min_amount": "20"}, body(self.http.last_request())
+        )
+
     def test_a_coupon_can_expire_at_the_end_of_a_day(self) -> None:
         self.http.json({"data": fixture("coupon")}, 201)
 

@@ -190,6 +190,18 @@ class AccountTest(unittest.TestCase):
         self.assertEqual({"underpayment_tolerance": "2"}, body(self.http.last_request()))
         self.assertEqual("live", settings.mode)
 
+    def test_the_payment_tolerances_are_sent_as_decimal_strings(self) -> None:
+        self.http.json({"data": fixture("account")["data"]})
+
+        client(self.http).account.update_payment_settings(
+            {"underpayment_tolerance": 2.5, "overpayment_threshold": 3, "invoice_reminders": True}
+        )
+
+        self.assertEqual(
+            {"underpayment_tolerance": "2.5", "overpayment_threshold": "3", "invoice_reminders": True},
+            body(self.http.last_request()),
+        )
+
     def test_a_field_set_to_none_is_sent_as_null_to_clear_it(self) -> None:
         self.http.json({"data": fixture("account")["data"]})
 

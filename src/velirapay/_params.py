@@ -12,7 +12,11 @@ from decimal import Decimal
 from typing import Required, TypeAlias, TypedDict
 
 Amount: TypeAlias = str | int | float | Decimal
-"""An amount of money or of a coin. Pass a str such as "49.90", or a Decimal, to keep every decimal."""
+"""An amount of money or of a coin, sent as a decimal string. Pass a str such as "49.90", or a Decimal, to keep every decimal.
+
+A float is rounded to 14 significant digits, the precision the API reads a number with, and written without an exponent:
+0.00005 is sent as "0.00005", and 0.1 + 0.2 as "0.3".
+"""
 
 Metadata: TypeAlias = Mapping[str, str | int | float | bool | None]
 """Your own key-value data: up to 20 keys of at most 40 characters, each a string of at most 500 characters, a number, a boolean or None."""

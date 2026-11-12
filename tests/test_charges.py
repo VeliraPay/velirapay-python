@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import math
 import pickle
 import unittest
 from datetime import UTC, date, datetime, timedelta, timezone
@@ -444,6 +445,53 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("POST", request.method)
         self.assertEqual("/v1/charges/k3v9x2m7q8wz/refunds", path_of(request))
         self.assertEqual({"amount": "0.0005", "txid": "c1f0e2d3", "reason": "Partial refund"}, body(request))
+
+    def test_an_amount_given_as_a_number_is_sent_as_a_decimal_string_without_an_exponent(self) -> None:
+        for amount, sent in (
+            (0.00005, "0.00005"),
+            (1e-8, "0.00000001"),
+            (0.1, "0.1"),
+            (0.1 + 0.2, "0.3"),
+            (1.1 * 3, "3.3"),
+            (123456789.123456789, "123456789.12346"),
+            (1e20, "100000000000000000000"),
+            (150.0, "150"),
+            (2, "2"),
+            (Decimal("0.00005"), "0.00005"),
+            ("0.0005", "0.0005"),
+        ):
+            with self.subTest(amount):
+                self.http.json({"data": fixture("charge")}, 201)
+
+                client(self.http).charges.record_refund("k3v9x2m7q8wz", {"amount": amount})
+
+                self.assertEqual({"amount": sent}, body(self.http.last_request()))
+
+    def test_a_simulated_payment_of_a_small_amount_is_sent_without_an_exponent(self) -> None:
+        self.http.json({"data": fixture("charge")})
+
+        client(self.http).charges.simulate("k3v9x2m7q8wz", {"amount": 0.00005})
+
+        self.assertEqual(b'{"amount":"0.00005"}', self.http.last_request().body)
+
+    def test_an_amount_that_is_not_a_number_is_refused_before_a_request_is_sent(self) -> None:
+        for amount in (math.nan, math.inf, -math.inf):
+            with self.subTest(amount), self.assertRaisesRegex(InvalidArgumentError, "cannot be sent"):
+                client(self.http).charges.record_refund("k3v9x2m7q8wz", {"amount": amount})
+
+        self.assertEqual([], self.http.requests)
+
+    def test_only_the_amount_of_a_new_charge_is_written_as_a_decimal_string(self) -> None:
+        self.http.json({"data": fixture("charge")}, 201)
+
+        client(self.http).charges.create(
+            {"asset": "BTC", "amount": 49.9, "currency": "EUR", "metadata": {"score": 0.00005, "orders": 7}}
+        )
+
+        self.assertEqual(
+            b'{"asset":"BTC","amount":"49.9","currency":"EUR","metadata":{"score":5e-05,"orders":7}}',
+            self.http.last_request().body,
+        )
 
     def test_each_status_has_its_helper(self) -> None:
         for status, helper in (

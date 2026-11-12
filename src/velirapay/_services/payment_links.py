@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from .._page import Page
 from .._params import PaymentLinkCreateParams, PaymentLinkListParams, PaymentLinkUpdateParams
 from .._resources.payment_link import PaymentLink
-from ._base import Service, path
+from ._base import Service, amounts, path
 
 
 class PaymentLinkService(Service):
@@ -17,7 +17,7 @@ class PaymentLinkService(Service):
 
     def create(self, params: PaymentLinkCreateParams, *, idempotency_key: str | None = None) -> PaymentLink:
         """Create a payment link: one reusable public page, never one per customer."""
-        return PaymentLink(self._request("POST", "/v1/payment-links", params, idempotency_key))
+        return PaymentLink(self._request("POST", "/v1/payment-links", _amounts(params), idempotency_key))
 
     def retrieve(self, id: str) -> PaymentLink:
         """Retrieve a payment link by its id."""
@@ -25,7 +25,7 @@ class PaymentLinkService(Service):
 
     def update(self, id: str, params: PaymentLinkUpdateParams, *, idempotency_key: str | None = None) -> PaymentLink:
         """Change any of a payment link's fields."""
-        return PaymentLink(self._request("PATCH", path("/v1/payment-links/%s", id), params, idempotency_key))
+        return PaymentLink(self._request("PATCH", path("/v1/payment-links/%s", id), _amounts(params), idempotency_key))
 
     def list(self, params: PaymentLinkListParams | None = None) -> Page[PaymentLink]:
         """List payment links, newest first."""
@@ -42,3 +42,8 @@ class PaymentLinkService(Service):
     def restore(self, id: str, *, idempotency_key: str | None = None) -> PaymentLink:
         """Restore an archived payment link."""
         return PaymentLink(self._request("DELETE", path("/v1/payment-links/%s/archive", id), None, idempotency_key))
+
+
+def _amounts(params: PaymentLinkCreateParams | PaymentLinkUpdateParams) -> dict[str, object]:
+    """A payment link's params with its prices written as decimal strings."""
+    return amounts(params, "amount", "suggested_amounts", "min_amount", "max_amount")

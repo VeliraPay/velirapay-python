@@ -44,6 +44,30 @@ class PaymentLinkTest(unittest.TestCase):
         )
         self.assertEqual("p4n8r2t6y1ua", link.id)
 
+    def test_the_prices_of_a_payment_link_are_sent_as_decimal_strings(self) -> None:
+        self.http.json({"data": fixture("payment_link")}, 201).json({"data": fixture("payment_link")})
+        velirapay = client(self.http)
+
+        velirapay.payment_links.create(
+            {
+                "title": "Tip jar",
+                "pricing_type": PricingType.OPEN,
+                "currency": "USD",
+                "suggested_amounts": [5, 10.5, "25.00"],
+                "min_amount": 1.0,
+                "max_amount": 500,
+            }
+        )
+
+        sent = body(self.http.last_request())
+        self.assertEqual(["5", "10.5", "25.00"], sent["suggested_amounts"])
+        self.assertEqual("1", sent["min_amount"])
+        self.assertEqual("500", sent["max_amount"])
+
+        velirapay.payment_links.update("p4n8r2t6y1ua", {"pricing_type": PricingType.FIXED, "amount": 19.99})
+
+        self.assertEqual({"pricing_type": "fixed", "amount": "19.99"}, body(self.http.last_request()))
+
     def test_a_payment_link_is_read_into_typed_attributes(self) -> None:
         self.http.json({"data": fixture("payment_link")})
 

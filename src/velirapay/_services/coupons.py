@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from .._page import Page
 from .._params import CouponCreateParams, CouponListParams, CouponUpdateParams
 from .._resources.coupon import Coupon
-from ._base import Service, path
+from ._base import Service, amounts, path
 
 
 class CouponService(Service):
@@ -17,7 +17,9 @@ class CouponService(Service):
 
     def create(self, params: CouponCreateParams, *, idempotency_key: str | None = None) -> Coupon:
         """Create a coupon taking either percent_off or amount_off; currency is required with amount_off or min_amount."""
-        return Coupon(self._request("POST", "/v1/coupons", params, idempotency_key))
+        body = amounts(params, "percent_off", "amount_off", "min_amount")
+
+        return Coupon(self._request("POST", "/v1/coupons", body, idempotency_key))
 
     def retrieve(self, id: str) -> Coupon:
         """Retrieve a coupon by its code, in any case."""

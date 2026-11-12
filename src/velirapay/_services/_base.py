@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import urllib.parse
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, TypeVar
 
 from .._errors import InvalidArgumentError, UnexpectedResponseError
 from .._http import ApiResponse
 from .._page import Page
-from .._requester import Requester
+from .._requester import Requester, format_amount
 from .._resources._base import ApiResource, whole_number
 
 T = TypeVar("T", bound=ApiResource)
@@ -87,6 +87,21 @@ def objects(response: ApiResponse) -> list[dict[str, Any]]:
         raise UnexpectedResponseError("The VeliraPay API answered without the list it was asked for.", response)
 
     return [item for item in value if isinstance(item, dict)]
+
+
+def amounts(params: Mapping[str, object], *keys: str) -> dict[str, object]:
+    """The params with the amounts under the given keys, or each amount of a list there, written as decimal strings."""
+    body = dict(params)
+
+    for key in keys:
+        value = body.get(key)
+
+        if isinstance(value, Sequence) and not isinstance(value, str | bytes | bytearray):
+            body[key] = [format_amount(item) for item in value]
+        elif key in body:
+            body[key] = format_amount(value)
+
+    return body
 
 
 def path(template: str, *ids: str) -> str:

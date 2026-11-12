@@ -39,8 +39,37 @@ class InvoiceTest(unittest.TestCase):
                 self.assertEqual("/v1/invoices", path_of(request))
                 self.assertEqual("2026-10-15", sent["due_at"])
                 self.assertIs(True, sent["send_email"])
-                self.assertEqual(10, sent["items"][0]["quantity"])
+                self.assertEqual("10", sent["items"][0]["quantity"])
                 self.assertEqual("w7c2h5j9d3kx", invoice.id)
+
+    def test_the_amounts_of_a_new_invoice_are_sent_as_decimal_strings(self) -> None:
+        self.http.json({"data": fixture("invoice")}, 201).json({"data": fixture("invoice")}, 201)
+        velirapay = client(self.http)
+
+        velirapay.invoices.create(
+            {
+                "customer_name": "Grace Hopper",
+                "customer_email": "grace@example.com",
+                "currency": "USD",
+                "amount": 1250.5,
+            }
+        )
+
+        self.assertEqual("1250.5", body(self.http.last_request())["amount"])
+
+        velirapay.invoices.create(
+            {
+                "customer_name": "Grace Hopper",
+                "customer_email": "grace@example.com",
+                "currency": "USD",
+                "items": [{"description": "Consulting", "quantity": 2.5, "unit_amount": 99.9}],
+            }
+        )
+
+        self.assertEqual(
+            [{"description": "Consulting", "quantity": "2.5", "unit_amount": "99.9"}],
+            body(self.http.last_request())["items"],
+        )
 
     def test_an_invoice_is_read_into_typed_attributes(self) -> None:
         self.http.json({"data": fixture("invoice")})

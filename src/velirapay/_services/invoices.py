@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 
 from .._page import Page
 from .._params import InvoiceCreateParams, InvoiceListParams
 from .._resources.invoice import Invoice
-from ._base import Service, path
+from ._base import Service, amounts, path
 
 
 class InvoiceService(Service):
@@ -18,8 +18,17 @@ class InvoiceService(Service):
 
     def create(self, params: InvoiceCreateParams, *, idempotency_key: str | None = None) -> Invoice:
         """Create an invoice, for a total or a list of items, and optionally email it to the customer. A datetime due_at is sent as its day, in its own time zone."""
-        due_at = params.get("due_at")
-        body = {**params, "due_at": due_at.date()} if isinstance(due_at, datetime) else params
+        body = amounts(params, "amount")
+        due_at = body.get("due_at")
+        items = body.get("items")
+
+        if isinstance(due_at, datetime):
+            body["due_at"] = due_at.date()
+
+        if isinstance(items, Sequence) and not isinstance(items, str | bytes | bytearray):
+            body["items"] = [
+                amounts(item, "quantity", "unit_amount") if isinstance(item, Mapping) else item for item in items
+            ]
 
         return Invoice(self._request("POST", "/v1/invoices", body, idempotency_key))
 
