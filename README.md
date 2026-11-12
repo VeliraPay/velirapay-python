@@ -1,6 +1,7 @@
 # VeliraPay for Python
 
 [![Tests](https://github.com/VeliraPay/velirapay-python/actions/workflows/tests.yml/badge.svg)](https://github.com/VeliraPay/velirapay-python/actions/workflows/tests.yml)
+[![Latest version](https://img.shields.io/pypi/v/velirapay)](https://pypi.org/project/velirapay/)
 [![License](https://img.shields.io/github/license/VeliraPay/velirapay-python)](https://github.com/VeliraPay/velirapay-python/blob/main/LICENSE)
 
 The official Python library for [VeliraPay](https://velirapay.com), the crypto payment processor. It covers the v1 API (the coins on offer, charges, invoices, payment links, coupons, payouts, events, webhook endpoints and your account) and verifies the webhooks VeliraPay sends you. It is fully typed and has no dependencies.
