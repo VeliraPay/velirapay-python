@@ -69,7 +69,7 @@ def pay() -> ResponseReturnValue:
             "metadata": {"order_id": "1042"},
             "success_url": "https://example.com/orders/1042",
         },
-        idempotency_key="order-1042",
+        idempotency_key="order-1042-attempt-1",
     )
 
     assert charge.checkout_url is not None
@@ -77,7 +77,7 @@ def pay() -> ResponseReturnValue:
     return redirect(charge.checkout_url, code=303)
 ```
 
-They pay there, and VeliraPay tells your server about it with a [webhook](#webhooks). The exchange rate is locked when the charge is created, and the customer has 30 minutes to pay.
+They pay there, and VeliraPay tells your server about it with a [webhook](#webhooks). The exchange rate is locked when the charge is created, and the customer has 30 minutes to pay. The idempotency key makes the call safe to retry: use a new one for a new attempt, such as a charge replacing one that expired ([Retries and idempotency](#retries-and-idempotency)).
 
 Parameters are a dict under the names the API gives them, as the [API reference](https://velirapay.com/docs) lists them. A key you leave out is not sent and a key set to `None` is sent as `null`, which is how a field is cleared; that difference is why they are not keyword arguments, and so is `from`, a Python keyword the activity log filters by. They are typed (`ChargeCreateParams` and so on), so your editor and type checker know every key. [Enum members](#constants) such as `Asset.BTC` can stand in for their values, and a `datetime`, a `date` or a `Decimal` is sent the way the API expects: a `datetime` in UTC, one without a time zone being taken as UTC already.
 
@@ -855,19 +855,19 @@ except ApiError as error:
 
 Requests that fail with a network error, a rate limit (429) or an outage (502, 503, 504) are tried again up to twice, waiting a little longer each time, or as long as the API's `Retry-After` header asks. A 500 is retried for reads only, since a write may have been carried out. A 409 is retried only when it carries a `Retry-After`: that is the API still working on an earlier request with the same idempotency key, and the retry gets that request's response once it is done. A `Retry-After` longer than `max_retry_after` (10 seconds unless [configured](#configuration) otherwise) is not waited out: the error is raised straight away, and its `retry_after()` says how long to wait.
 
-While retries are on, each write carries an `Idempotency-Key` header, so the API carries out a retried request once. The library makes up a key per call; pass your own, such as an order number, to make a call safe to repeat across processes:
+While retries are on, each write carries an `Idempotency-Key` header, so the API carries out a retried request once. The library makes up a key per call; pass your own to make a call safe to repeat across processes, such as after a crash:
 
 ```python
 charge = velirapay.charges.create(
     {"amount": "49.90", "currency": "EUR", "asset": "BTC"},
-    idempotency_key="order-1042",
+    idempotency_key="order-1042-attempt-1",
 )
 
 response = velirapay.last_response()
 response is not None and response.was_replayed()  # True when the API answered from an earlier request
 ```
 
-For 24 hours, a request repeating a key gets the first successful response, and `velirapay.last_response().was_replayed()` is then true. A request that failed stores nothing, so repeating it runs it again. Reusing a key with a different body raises a `ConflictError`. A key covers one account, one mode, one method and one path, and is at most 255 characters; every API key of that account and mode shares it, so two servers using different API keys still create one charge for one idempotency key.
+For 24 hours, a request repeating a key gets the first successful response, and `velirapay.last_response().was_replayed()` is then true. A request that failed stores nothing, so repeating it runs it again. Reuse a key only to retry the same request, and give a new attempt a new key: a charge replacing one that expired, created under the first one's key, would get the expired charge back for a day, hence keys such as `order-1042-attempt-1` rather than the bare order number. Reusing a key with a different body, such as another coin, raises a `ConflictError`. A key covers one account, one mode, one method and one path, and is at most 255 characters; every API key of that account and mode shares it, so two servers using different API keys still create one charge for one idempotency key.
 
 Three answers carry a secret that is shown once and never kept, so they cannot be replayed: the key that `api_keys.create()` makes, and the signing secret of `webhook_endpoints.create()` and `rotate_secret()`. Repeating one of these, which a retry after a lost answer does, raises a `ConflictError` whose `was_replayed()` is true. The write was carried out, but its secret is gone:
 

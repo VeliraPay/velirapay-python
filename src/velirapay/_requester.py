@@ -69,7 +69,7 @@ class Requester:
             idempotency_key.strip() == "" or not _HEADER_VALUE.fullmatch(idempotency_key)
         ):
             raise InvalidArgumentError(
-                "An idempotency key is sent as a header, so it must be printable ASCII and not blank, such as an order number."
+                "An idempotency key is sent as a header, so it must be printable ASCII and not blank, such as order-1042-attempt-1."
             )
 
         # A retried write must not be carried out twice, so every attempt carries the same key.
