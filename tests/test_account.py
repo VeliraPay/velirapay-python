@@ -3,7 +3,24 @@ from __future__ import annotations
 import unittest
 from datetime import UTC, date, datetime, timedelta, timezone
 
-from velirapay import AccountCheckout, AccountInvoices, BusinessType, Industry, InvalidArgumentError, MonthlyVolume
+from velirapay import (
+    AccountCheckout,
+    AccountInvoices,
+    BusinessType,
+    Industry,
+    InvalidArgumentError,
+    MonthlyVolume,
+    OverviewAsset,
+    OverviewAttention,
+    OverviewChargeAmount,
+    OverviewDay,
+    OverviewFunnel,
+    OverviewFunnelAsset,
+    OverviewPaymentLink,
+    OverviewPeriod,
+    OverviewSetup,
+    OverviewWaitingPayouts,
+)
 
 from .support import MockTransport, body, client, fixture, list_response, path_of, query_of
 
@@ -253,6 +270,93 @@ class AccountTest(unittest.TestCase):
         self.assertIsNone(overview.conversion_rate_percent)
         self.assertEqual("0", overview.volume)
         self.assertEqual(0, overview.paid_charges)
+
+    def test_the_overviews_period_funnel_attention_coins_links_setup_and_days_are_typed(self) -> None:
+        self.http.json(fixture("overview"))
+
+        overview = client(self.http).overview.retrieve()
+
+        self.assertEqual(OverviewPeriod(from_=date(2026, 10, 14), to=date(2026, 11, 12)), overview.period)
+        self.assertEqual(
+            OverviewFunnel(
+                started=45,
+                paid=37,
+                waiting=3,
+                abandoned=4,
+                incomplete=1,
+                assets=[
+                    OverviewFunnelAsset(asset="BTC", started=30, paid=25, abandoned=3),
+                    OverviewFunnelAsset(asset="USDT_TRON", started=15, paid=12, abandoned=1),
+                ],
+            ),
+            overview.funnel,
+        )
+        self.assertEqual(
+            OverviewAttention(
+                underpaid_charges=[
+                    OverviewChargeAmount(id="2t4bcuqkpkoy", asset="BTC", amount="0.00151", received_amount="0.0015")
+                ],
+                late_payments=[
+                    OverviewChargeAmount(id="m2q7w4e9r1ty", asset="ETH", amount="0.0421", received_amount="0.0421")
+                ],
+                payouts_waiting_for_address=[OverviewWaitingPayouts(asset="SOL", count=2)],
+                failing_webhook_endpoints=1,
+            ),
+            overview.attention,
+        )
+        self.assertEqual(
+            [
+                OverviewAsset(asset="BTC", paid_charges=25, share_percent=67.57),
+                OverviewAsset(asset="USDT_TRON", paid_charges=12, share_percent=32.43),
+            ],
+            overview.assets,
+        )
+        self.assertEqual(
+            [OverviewPaymentLink(id="p4n8r2t6y1ua", title="Pro plan", paid_charges=20)], overview.top_payment_links
+        )
+        self.assertEqual(
+            OverviewSetup(
+                payout_address=True, payment_link=True, paid_charge=True, webhook_endpoint=False, public_profile=True
+            ),
+            overview.setup,
+        )
+        self.assertEqual(
+            [
+                OverviewDay(date=date(2026, 10, 14), volume="120.00", sent_volume="116.40", paid_charges=1),
+                OverviewDay(date=date(2026, 11, 12), volume="0.00", sent_volume="0.00", paid_charges=0),
+            ],
+            overview.daily,
+        )
+        self.assertEqual(fixture("overview")["data"]["funnel"], overview.get("funnel"))
+
+    def test_an_overview_without_its_blocks_reads_them_as_empty(self) -> None:
+        self.http.json(
+            {
+                "data": {
+                    "currency": "USD",
+                    "period": {"from": None, "to": None},
+                    "top_payment_links": [{"id": None, "title": None, "paid_charges": 3}],
+                }
+            }
+        )
+
+        overview = client(self.http).overview.retrieve()
+
+        self.assertEqual(OverviewPeriod(from_=None, to=None), overview.period)
+        self.assertEqual(
+            OverviewFunnel(started=0, paid=0, waiting=0, abandoned=0, incomplete=0, assets=[]), overview.funnel
+        )
+        self.assertEqual(
+            OverviewAttention(
+                underpaid_charges=[], late_payments=[], payouts_waiting_for_address=[], failing_webhook_endpoints=0
+            ),
+            overview.attention,
+        )
+        self.assertEqual([], overview.assets)
+        self.assertEqual([OverviewPaymentLink(id=None, title=None, paid_charges=3)], overview.top_payment_links)
+        self.assertFalse(overview.setup.payout_address)
+        self.assertFalse(overview.setup.public_profile)
+        self.assertEqual([], overview.daily)
 
     def test_payout_addresses_are_listed_set_and_removed(self) -> None:
         bitcoin = {

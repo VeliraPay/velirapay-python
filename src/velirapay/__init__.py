@@ -92,7 +92,19 @@ from ._resources.coupon import Coupon
 from ._resources.event import Event
 from ._resources.invoice import Invoice, InvoiceCharge, InvoiceItem
 from ._resources.member import Invitation, Member
-from ._resources.overview import Overview
+from ._resources.overview import (
+    Overview,
+    OverviewAsset,
+    OverviewAttention,
+    OverviewChargeAmount,
+    OverviewDay,
+    OverviewFunnel,
+    OverviewFunnelAsset,
+    OverviewPaymentLink,
+    OverviewPeriod,
+    OverviewSetup,
+    OverviewWaitingPayouts,
+)
 from ._resources.payment_link import CheckoutQuestion, PaymentLink
 from ._resources.payout import Payout, PayoutAddress, PayoutSummary
 from ._resources.pro_payment import ProPayment
@@ -206,7 +218,17 @@ __all__ = [
     "MonthlyVolume",
     "NotFoundError",
     "Overview",
+    "OverviewAsset",
+    "OverviewAttention",
+    "OverviewChargeAmount",
+    "OverviewDay",
+    "OverviewFunnel",
+    "OverviewFunnelAsset",
+    "OverviewPaymentLink",
+    "OverviewPeriod",
     "OverviewService",
+    "OverviewSetup",
+    "OverviewWaitingPayouts",
     "Page",
     "PageParams",
     "PaymentLink",

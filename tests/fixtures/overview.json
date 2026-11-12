@@ -1,0 +1,108 @@
+{
+    "data": {
+        "object": "overview",
+        "period": {
+            "from": "2026-10-14",
+            "to": "2026-11-12"
+        },
+        "currency": "USD",
+        "volume": "4280.00",
+        "volume_change_percent": 12.5,
+        "sent_volume": "4011.62",
+        "paid_charges": 37,
+        "conversion_rate_percent": 82.22,
+        "pending_charges": 3,
+        "active_payment_links": 2,
+        "open_invoices": 1,
+        "overdue_invoices": 0,
+        "funnel": {
+            "started": 45,
+            "paid": 37,
+            "waiting": 3,
+            "abandoned": 4,
+            "incomplete": 1,
+            "assets": [
+                {
+                    "asset": "BTC",
+                    "started": 30,
+                    "paid": 25,
+                    "abandoned": 3
+                },
+                {
+                    "asset": "USDT_TRON",
+                    "started": 15,
+                    "paid": 12,
+                    "abandoned": 1
+                }
+            ]
+        },
+        "attention": {
+            "underpaid_charges": [
+                {
+                    "id": "2t4bcuqkpkoy",
+                    "asset": "BTC",
+                    "amount": "0.00151",
+                    "received_amount": "0.0015"
+                }
+            ],
+            "late_payments": [
+                {
+                    "id": "m2q7w4e9r1ty",
+                    "asset": "ETH",
+                    "amount": "0.0421",
+                    "received_amount": "0.0421"
+                }
+            ],
+            "payouts_waiting_for_address": [
+                {
+                    "asset": "SOL",
+                    "count": 2
+                }
+            ],
+            "failing_webhook_endpoints": 1
+        },
+        "assets": [
+            {
+                "asset": "BTC",
+                "paid_charges": 25,
+                "share_percent": 67.57
+            },
+            {
+                "asset": "USDT_TRON",
+                "paid_charges": 12,
+                "share_percent": 32.43
+            }
+        ],
+        "top_payment_links": [
+            {
+                "id": "p4n8r2t6y1ua",
+                "title": "Pro plan",
+                "paid_charges": 20
+            }
+        ],
+        "setup": {
+            "payout_address": true,
+            "payment_link": true,
+            "paid_charge": true,
+            "webhook_endpoint": false,
+            "public_profile": true
+        },
+        "daily": [
+            {
+                "date": "2026-10-14",
+                "volume": "120.00",
+                "sent_volume": "116.40",
+                "paid_charges": 1
+            },
+            {
+                "date": "2026-11-12",
+                "volume": "0.00",
+                "sent_volume": "0.00",
+                "paid_charges": 0
+            }
+        ]
+    },
+    "meta": {
+        "mode": "live"
+    }
+}
