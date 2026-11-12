@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "velirapay"
 version = "0.1.0"
-description = "The official Python library for VeliraPay crypto payments: charges, payment links, invoices, payouts, events and webhook verification."
+description = "Official Python library for VeliraPay crypto payments: charges, payment links, invoices, payouts, events and webhook verification."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -14,14 +14,20 @@ authors = [{ name = "VeliraPay" }]
 keywords = [
   "velirapay",
   "crypto",
+  "crypto-payments",
+  "cryptocurrency",
   "payments",
   "payment-gateway",
+  "payment-processing",
   "bitcoin",
   "ethereum",
   "solana",
+  "litecoin",
+  "usdt",
+  "usdc",
   "webhooks",
   "sdk",
-  "api",
+  "api-client",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
