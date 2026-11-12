@@ -2,7 +2,7 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-11-12
 
 The first version, covering what the PHP library covers as of its 0.6.5:
 
