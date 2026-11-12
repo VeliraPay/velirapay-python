@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import builtins
 from collections.abc import Iterator
 
 from .._enums import AddressNetwork
 from .._page import Page
 from .._params import PayoutAddressUpdateParams, PayoutListParams
-from .._resources.payout import Payout, PayoutAddress, PayoutSummary
-from ._base import Service, objects, path
+from .._resources.payout import Payout, PayoutAddress, PayoutAddressList, PayoutSummary, PayoutSummaryList
+from ._base import Service, meta, objects, path
 
 
 class PayoutService(Service):
@@ -29,9 +28,11 @@ class PayoutService(Service):
         """Iterate over every payout, newest first, fetching pages as they are reached."""
         yield from self.list(params).auto_paging_iterator()
 
-    def summary(self) -> builtins.list[PayoutSummary]:
-        """Add up, per coin, what has been paid out, what is on its way and what is still owed."""
-        return self._page("/v1/payouts/summary", None, PayoutSummary).data
+    def summary(self) -> PayoutSummaryList:
+        """Add up, per coin, what has been paid out, what is on its way and what is still owed, in a list that also has the mode."""
+        response = self._respond("GET", "/v1/payouts/summary")
+
+        return PayoutSummaryList([PayoutSummary(row) for row in objects(response)], meta(response))
 
 
 class PayoutAddressService(Service):
@@ -39,9 +40,14 @@ class PayoutAddressService(Service):
 
     __slots__ = ()
 
-    def list(self) -> builtins.list[PayoutAddress]:
-        """List where payouts go in the API key's mode: one entry per network with coins on offer, its address None while there is none."""
-        return [PayoutAddress(address) for address in objects(self._respond("GET", "/v1/payout-addresses"))]
+    def list(self) -> PayoutAddressList:
+        """List where payouts go in the API key's mode: one entry per network with coins on offer, its address None while there is none.
+
+        The list also has the mode, and api_payout_address_changes, whether an owner lets update() and delete() be used.
+        """
+        response = self._respond("GET", "/v1/payout-addresses")
+
+        return PayoutAddressList([PayoutAddress(address) for address in objects(response)], meta(response))
 
     def update(
         self, network: AddressNetwork | str, params: PayoutAddressUpdateParams, *, idempotency_key: str | None = None

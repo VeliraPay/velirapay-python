@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from .._enums import PayoutStatus
-from ._base import ApiResource, integer, nullable_string, string, strings, timestamp
+from ._base import ApiResource, ResourceList, boolean, integer, nullable_string, string, strings, timestamp
 
 
 class Payout(ApiResource):
@@ -217,3 +217,20 @@ class PayoutAddress(ApiResource):
     def updated_at(self) -> datetime | None:
         """When the address was last saved."""
         return timestamp(self._attributes, "updated_at")
+
+
+class PayoutSummaryList(ResourceList[PayoutSummary]):
+    """What each coin adds up to across the account's payouts, one PayoutSummary per coin, as a list that also has the answer's mode."""
+
+    __slots__ = ()
+
+
+class PayoutAddressList(ResourceList[PayoutAddress]):
+    """Where payouts go, one PayoutAddress per network family, as a list that also has the answer's mode and the owner's switch."""
+
+    __slots__ = ()
+
+    @property
+    def api_payout_address_changes(self) -> bool:
+        """Whether an owner lets API keys and AI apps change payout addresses, which update() and delete() need."""
+        return boolean(self._meta, "api_payout_address_changes")

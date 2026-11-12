@@ -4,7 +4,7 @@ import unittest
 from datetime import UTC, datetime
 from typing import Any
 
-from velirapay import Asset, PayoutStatus
+from velirapay import Asset, PayoutStatus, PayoutSummary, PayoutSummaryList
 
 from .support import MockTransport, client, path_of
 
@@ -101,6 +101,11 @@ class PayoutTest(unittest.TestCase):
         summary = client(self.http).payouts.summary()
 
         self.assertEqual("/v1/payouts/summary", path_of(self.http.last_request()))
+        self.assertIsInstance(summary, PayoutSummaryList)
+        self.assertIsInstance(summary, list)
+        self.assertEqual("live", summary.mode)
+        self.assertEqual({"mode": "live"}, summary.meta)
+        self.assertEqual([PayoutSummary(summary[0].to_dict())], summary)
         self.assertEqual(1, len(summary))
         self.assertEqual("BTC", summary[0].asset)
         self.assertEqual(3, summary[0].payouts)

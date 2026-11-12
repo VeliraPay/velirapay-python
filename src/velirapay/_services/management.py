@@ -34,7 +34,9 @@ class OverviewService(Service):
 
     def retrieve(self) -> Overview:
         """Retrieve the dashboard's figures for the last 30 days, in the API key's mode."""
-        return Overview(self._request("GET", "/v1/overview"))
+        response = self._respond("GET", "/v1/overview")
+
+        return Overview(data(response), meta(response))
 
 
 class ActivityService(Service):

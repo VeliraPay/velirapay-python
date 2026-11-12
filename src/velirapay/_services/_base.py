@@ -58,6 +58,7 @@ class Service:
             last_page=_number(position.get("last_page"), current_page),
             per_page=_number(position.get("per_page"), len(items)),
             total=_number(position.get("total"), len(items)),
+            meta=position,
             fetch=lambda page: self._page(path, {**query, "page": page}, hydrate),
         )
 

@@ -53,6 +53,20 @@ class PaginationTest(unittest.TestCase):
         self.assertFalse(following.has_more())
         self.assertEqual({"per_page": "1", "page": "2"}, query_of(self.http.last_request()))
 
+    def test_a_page_keeps_the_meta_of_its_list(self) -> None:
+        self.http.json(list_response([fixture("charge")], current_page=1, last_page=2, per_page=1, total=2))
+
+        page = client(self.http).charges.list({"per_page": 1})
+
+        self.assertEqual(2, page.meta["last_page"])
+        self.assertEqual("https://api.velirapay.com/v1/charges", page.meta["path"])
+        self.assertIsNone(page.mode)
+        self.assertEqual([], page.currencies)
+
+        page.meta["last_page"] = 9
+
+        self.assertEqual(2, page.meta["last_page"])
+
     def test_the_last_page_has_no_next_page(self) -> None:
         self.http.json(list_response([fixture("charge")]))
 

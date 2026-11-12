@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import copy
 import datetime
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -183,7 +185,17 @@ class OverviewDay:
 class Overview(ApiResource):
     """The dashboard's figures for the last 30 days, in the API key's mode."""
 
-    __slots__ = ()
+    __slots__ = ("_meta",)
+
+    def __init__(self, attributes: Mapping[str, Any], meta: Mapping[str, Any] | None = None) -> None:
+        """Read the overview from its attributes and the meta the API sent with them."""
+        super().__init__(attributes)
+        self._meta: dict[str, Any] = copy.deepcopy(dict(meta or {}))
+
+    @property
+    def mode(self) -> str | None:
+        """The mode of the API key that asked, which the figures are for: "live" or "test"."""
+        return nullable_string(self._meta, "mode")
 
     @property
     def period(self) -> OverviewPeriod:

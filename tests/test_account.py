@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import pickle
 import unittest
 from datetime import UTC, date, datetime, timedelta, timezone
 
@@ -276,6 +278,7 @@ class AccountTest(unittest.TestCase):
 
         overview = client(self.http).overview.retrieve()
 
+        self.assertEqual("live", overview.mode)
         self.assertEqual(OverviewPeriod(from_=date(2026, 10, 14), to=date(2026, 11, 12)), overview.period)
         self.assertEqual(
             OverviewFunnel(
@@ -342,6 +345,7 @@ class AccountTest(unittest.TestCase):
 
         overview = client(self.http).overview.retrieve()
 
+        self.assertIsNone(overview.mode)
         self.assertEqual(OverviewPeriod(from_=None, to=None), overview.period)
         self.assertEqual(
             OverviewFunnel(started=0, paid=0, waiting=0, abandoned=0, incomplete=0, assets=[]), overview.funnel
@@ -375,7 +379,7 @@ class AccountTest(unittest.TestCase):
                         bitcoin,
                         {**bitcoin, "network": "evm", "name": "Ethereum", "address": None, "assets": ["ETH", "USDT"]},
                     ],
-                    "meta": {"mode": "live"},
+                    "meta": {"mode": "live", "api_payout_address_changes": True},
                 }
             )
             .json({"data": {**bitcoin, "payouts_held_until": "2026-11-08T08:00:00.000000Z"}})
@@ -383,9 +387,13 @@ class AccountTest(unittest.TestCase):
         )
         velirapay = client(self.http)
 
-        current, missing = velirapay.payout_addresses.list()
+        addresses = velirapay.payout_addresses.list()
+        current, missing = addresses
 
         self.assertEqual("/v1/payout-addresses", path_of(self.http.last_request()))
+        self.assertEqual("live", addresses.mode)
+        self.assertTrue(addresses.api_payout_address_changes)
+        self.assertEqual(["bitcoin", "evm"], [address.network for address in addresses])
         self.assertEqual("bc1qexample", current.address)
         self.assertEqual(datetime(2026, 10, 2, 8, 14, 51, tzinfo=UTC), current.updated_at)
         self.assertIsNone(missing.address)
@@ -400,6 +408,18 @@ class AccountTest(unittest.TestCase):
 
         self.assertIsNone(velirapay.payout_addresses.delete("bitcoin").address)
         self.assertEqual("DELETE", self.http.last_request().method)
+
+    def test_payout_addresses_keep_the_owners_switch_through_copies(self) -> None:
+        self.http.json({"data": [], "meta": {"mode": "test", "api_payout_address_changes": False}})
+
+        addresses = client(self.http).payout_addresses.list()
+
+        self.assertEqual([], addresses)
+        self.assertFalse(addresses.api_payout_address_changes)
+
+        for clone in (pickle.loads(pickle.dumps(addresses)), copy.deepcopy(addresses)):
+            self.assertEqual("test", clone.mode)
+            self.assertEqual({"mode": "test", "api_payout_address_changes": False}, clone.meta)
 
     def test_the_activity_log_is_listed_with_its_filters(self) -> None:
         self.http.json(
@@ -422,14 +442,14 @@ class AccountTest(unittest.TestCase):
             }
         )
 
-        entry = (
-            client(self.http).activity.list({"action": "sensitive", "from": "2026-11-01", "to": "2026-11-06"}).data[0]
-        )
+        page = client(self.http).activity.list({"action": "sensitive", "from": "2026-11-01", "to": "2026-11-06"})
+        entry = page.data[0]
 
         self.assertEqual("/v1/activity", path_of(self.http.last_request()))
         self.assertEqual(
             {"action": "sensitive", "from": "2026-11-01", "to": "2026-11-06"}, query_of(self.http.last_request())
         )
+        self.assertEqual("live", page.mode)
         self.assertEqual("api_key.created", entry.action)
         self.assertEqual("Created an API key", entry.description)
         self.assertEqual('API key "Bot"', entry.actor)

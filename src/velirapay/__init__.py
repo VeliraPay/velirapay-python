@@ -106,7 +106,7 @@ from ._resources.overview import (
     OverviewWaitingPayouts,
 )
 from ._resources.payment_link import CheckoutQuestion, PaymentLink
-from ._resources.payout import Payout, PayoutAddress, PayoutSummary
+from ._resources.payout import Payout, PayoutAddress, PayoutAddressList, PayoutSummary, PayoutSummaryList
 from ._resources.pro_payment import ProPayment
 from ._resources.supported_asset import SupportedAsset
 from ._resources.webhook_endpoint import WebhookDelivery, WebhookDeliveryAttempt, WebhookEndpoint
@@ -240,12 +240,14 @@ __all__ = [
     "PaymentSettingsUpdateParams",
     "Payout",
     "PayoutAddress",
+    "PayoutAddressList",
     "PayoutAddressService",
     "PayoutAddressUpdateParams",
     "PayoutListParams",
     "PayoutService",
     "PayoutStatus",
     "PayoutSummary",
+    "PayoutSummaryList",
     "PermissionDeniedError",
     "PlanName",
     "PricingType",

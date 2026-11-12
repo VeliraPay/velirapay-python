@@ -79,6 +79,9 @@ class AssetTest(unittest.TestCase):
         self.assertEqual("https://api.velirapay.com/v1/assets?currency=EUR", request.url)
         self.assertEqual(3, len(page))
         self.assertFalse(page.has_more())
+        self.assertEqual("live", page.mode)
+        self.assertEqual(["USD", "EUR"], page.currencies)
+        self.assertEqual({"mode": "live", "currencies": ["USD", "EUR"]}, page.meta)
 
         bitcoin, tether, unknown = page.data
 

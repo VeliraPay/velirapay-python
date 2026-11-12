@@ -5,14 +5,15 @@ from __future__ import annotations
 import copy
 import math
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from .._errors import InvalidArgumentError
 
 E = TypeVar("E", bound=Enum)
+R = TypeVar("R", bound="ApiResource")
 
 _DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 # No count of anything has 19 digits, and int() refuses strings of more than 4,300.
@@ -51,6 +52,27 @@ class ApiResource:
     def to_dict(self) -> dict[str, Any]:
         """The attributes as the API sent them, such as to store the object or encode it as JSON."""
         return copy.deepcopy(self._attributes)
+
+
+class ResourceList(list[R], Generic[R]):
+    """A list of objects, as an answer that is not paged holds them, with the meta the API sent with them."""
+
+    __slots__ = ("_meta",)
+
+    def __init__(self, items: Iterable[R] = (), meta: Mapping[str, Any] | None = None) -> None:
+        """Hold the objects and the meta of an answer."""
+        super().__init__(items)
+        self._meta: dict[str, Any] = copy.deepcopy(dict(meta or {}))
+
+    @property
+    def meta(self) -> dict[str, Any]:
+        """Everything the API sent under the answer's "meta" key, including what this version of the library does not read."""
+        return copy.deepcopy(self._meta)
+
+    @property
+    def mode(self) -> str | None:
+        """The mode of the API key that asked: "live" or "test"."""
+        return nullable_string(self._meta, "mode")
 
 
 def string(data: Mapping[str, Any], key: str, fallback: str = "") -> str:
