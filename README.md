@@ -645,7 +645,7 @@ velirapay.account.update_payment_settings(
     {
         "default_currency": Currency.EUR,
         "underpayment_tolerance": "2",  # in percent: a charge this short still counts as paid
-        "checkout_locale": CheckoutLocale.FR,
+        "checkout_locale": CheckoutLocale.FRENCH,
         "invoice_reminders": True,
     }
 )
