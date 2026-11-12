@@ -20,8 +20,8 @@ from enum import Enum
 from ._errors import ApiConnectionError, ApiError, InvalidArgumentError
 from ._http import ApiResponse, HttpRequest, Transport
 
-_RETRYABLE_STATUSES = frozenset({429, 502, 503, 504})
-"""The statuses worth another attempt for any request."""
+_RETRYABLE_STATUSES = frozenset({429, 502, 503, 504, 520, 521, 522, 523, 524})
+"""The statuses worth another attempt for any request, Cloudflare's 520 to 524 for an origin it got no answer from included."""
 
 _NETWORK_ERRORS = (OSError, http.client.HTTPException)
 """What a transport raises when the API could not be reached or its answer not read."""

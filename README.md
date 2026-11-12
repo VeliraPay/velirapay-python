@@ -853,7 +853,7 @@ except ApiError as error:
 
 ## Retries and idempotency
 
-Requests that fail with a network error, a rate limit (429) or an outage (502, 503, 504) are tried again up to twice, waiting a little longer each time, or as long as the API's `Retry-After` header asks. A 500 is retried for reads only, since a write may have been carried out. A 409 is retried only when it carries a `Retry-After`: that is the API still working on an earlier request with the same idempotency key, and the retry gets that request's response once it is done. A `Retry-After` longer than `max_retry_after` (10 seconds unless [configured](#configuration) otherwise) is not waited out: the error is raised straight away, and its `retry_after()` says how long to wait.
+Requests that fail with a network error, a rate limit (429) or an outage (502, 503, 504, and Cloudflare's 520 to 524) are tried again up to twice, waiting a little longer each time, or as long as the API's `Retry-After` header asks. A 500 is retried for reads only, since a write may have been carried out. A 409 is retried only when it carries a `Retry-After`: that is the API still working on an earlier request with the same idempotency key, and the retry gets that request's response once it is done. A `Retry-After` longer than `max_retry_after` (10 seconds unless [configured](#configuration) otherwise) is not waited out: the error is raised straight away, and its `retry_after()` says how long to wait.
 
 While retries are on, each write carries an `Idempotency-Key` header, so the API carries out a retried request once. The library makes up a key per call; pass your own to make a call safe to repeat across processes, such as after a crash:
 

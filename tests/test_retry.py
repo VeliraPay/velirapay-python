@@ -10,6 +10,7 @@ from velirapay import (
     ApiConnectionError,
     ApiError,
     ApiKeyService,
+    ApiResponse,
     ConflictError,
     RateLimitError,
     ServerError,
@@ -74,6 +75,23 @@ class RetryTest(unittest.TestCase):
                 expected = min(8.0, 0.5 * 2**attempt)
                 self.assertGreaterEqual(wait, expected * 0.75)
                 self.assertLessEqual(wait, expected * 1.25)
+
+    def test_cloudflares_answers_for_an_unreachable_origin_are_retried(self) -> None:
+        for status in (520, 521, 522, 523, 524):
+            with self.subTest(status):
+                self.setUp()
+                self.http.queue(ApiResponse(status, {"Content-Type": "text/html"}, "<html>Cloudflare</html>")).json(
+                    {"data": fixture("charge")}, 201
+                )
+
+                response = self.transport().request("POST", "/v1/charges", None, {"asset": "BTC"})
+
+                self.assertEqual(201, response.status)
+                self.assertEqual(2, len(self.http.requests))
+                self.assertEqual(
+                    self.http.requests[0].headers["Idempotency-Key"], self.http.requests[1].headers["Idempotency-Key"]
+                )
+                self.assertEqual(1, len(self.sleeps))
 
     def test_a_given_idempotency_key_is_kept(self) -> None:
         self.http.json({"message": "Bad Gateway"}, 502).json({"data": fixture("charge")}, 201)
