@@ -90,7 +90,16 @@ class NotFoundError(ApiError):
 
 
 class ConflictError(ApiError):
-    """The object's state does not allow the action, or an idempotency key was reused for a different request or is held by one still being processed (409)."""
+    """The object's state does not allow the action, or an idempotency key was reused for a different request or is held by one still being processed (409).
+
+    It is also how the API answers a request repeating the idempotency key of one that succeeded but whose answer carried
+    a secret, which is shown once and not kept: creating an API key or a webhook endpoint, or rotating a signing secret.
+    was_replayed() tells that case apart.
+    """
+
+    def was_replayed(self) -> bool:
+        """Whether an earlier request with the same idempotency key succeeded, its answer carrying a secret that cannot be shown again: the key or webhook endpoint exists, or the secret was rotated, but the secret is lost."""
+        return self.response.was_replayed()
 
 
 class ValidationError(ApiError):

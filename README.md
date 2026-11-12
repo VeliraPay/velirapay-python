@@ -270,6 +270,27 @@ charge = velirapay.charges.create(params, idempotency_key="order-1042")
 
 For 24 hours, a request repeating a key gets the first successful response, and `velirapay.last_response().was_replayed()` is then true. Reusing a key with a different body raises a `ConflictError`. A key covers one account, one mode, one method and one path, and is at most 255 characters.
 
+Three answers carry a secret that is shown once and never kept, so they cannot be replayed: the key that `api_keys.create()` makes, and the signing secret of `webhook_endpoints.create()` and `rotate_secret()`. Repeating one of these, which a retry after a lost answer does, raises a `ConflictError` whose `was_replayed()` is true. The write was carried out, but its secret is gone:
+
+- **`api_keys.create()`**: the key exists. Find it with `api_keys.list()`, revoke it, and create another.
+- **`webhook_endpoints.create()`**: the endpoint exists with a secret nobody holds. Rotate its secret, since nothing depends on it yet, or delete the endpoint and add it again.
+- **`webhook_endpoints.rotate_secret()`**: the secret was rotated, and the one your receiver has keeps signing for a day. Rotate again only when you can put the new secret into the receiver straight away: only one earlier secret is kept, so a second rotation stops the receiver's from signing at once.
+
+```python
+from velirapay import ConflictError
+
+try:
+    endpoint = velirapay.webhook_endpoints.create(
+        {"url": "https://example.com/webhooks/velirapay", "events": ["charge.paid"]},
+        idempotency_key="endpoint-1",
+    )
+except ConflictError as error:
+    if not error.was_replayed():
+        raise
+
+    ...  # The endpoint was added, but its secret is lost: rotate it.
+```
+
 ## Test mode
 
 Keys starting with `vp_test_` work in test mode: charges are paid with test coins on each chain's test network, and nothing touches real funds. Test and live objects are fully separate, and each mode has its own webhooks.

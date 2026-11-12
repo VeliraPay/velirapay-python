@@ -4,19 +4,22 @@ import http.client
 import re
 import unittest
 import urllib.error
+from collections.abc import Callable
 
 from velirapay import (
     ApiConnectionError,
     ApiError,
+    ApiKeyService,
     ConflictError,
     RateLimitError,
     ServerError,
     ValidationError,
     VeliraPayClient,
+    WebhookEndpointService,
 )
 from velirapay._requester import Requester
 
-from .support import MockTransport, fixture, list_response
+from .support import MockTransport, fixture, list_response, path_of
 
 
 class RetryTest(unittest.TestCase):
@@ -152,6 +155,48 @@ class RetryTest(unittest.TestCase):
         self.assertIsNone(caught.exception.retry_after())
         self.assertEqual(1, len(self.http.requests))
         self.assertEqual([], self.sleeps)
+
+    def test_a_write_whose_lost_answer_carried_a_secret_raises_a_replayed_conflict(self) -> None:
+        stored = {
+            "message": "A request with this Idempotency-Key already succeeded. Its answer carried a secret, which is"
+            " shown once and not kept, so it cannot be replayed."
+        }
+        writes: list[tuple[str, Callable[[Requester], object]]] = [
+            ("/v1/api-keys", lambda requester: ApiKeyService(requester).create({"name": "Shop server"})),
+            (
+                "/v1/webhook-endpoints",
+                lambda requester: WebhookEndpointService(requester).create(
+                    {"url": "https://example.com/hooks", "events": ["charge.paid"]}
+                ),
+            ),
+            (
+                "/v1/webhook-endpoints/12/secret",
+                lambda requester: WebhookEndpointService(requester).rotate_secret("12"),
+            ),
+        ]
+
+        for path, write in writes:
+            with self.subTest(path):
+                self.setUp()
+                self.http.queue(TimeoutError("timed out")).json(stored, 409, {"Idempotent-Replayed": "true"})
+
+                with self.assertRaises(ConflictError) as caught:
+                    write(self.transport())
+
+                self.assertTrue(caught.exception.was_replayed())
+                self.assertEqual(stored["message"], str(caught.exception))
+                self.assertEqual([path, path], [path_of(request) for request in self.http.requests])
+                self.assertEqual(
+                    self.http.requests[0].headers["Idempotency-Key"], self.http.requests[1].headers["Idempotency-Key"]
+                )
+
+    def test_a_conflict_over_an_objects_state_was_not_replayed(self) -> None:
+        self.http.json({"message": "Only a pending charge can be canceled."}, 409)
+
+        with self.assertRaises(ConflictError) as caught:
+            self.transport().request("POST", "/v1/charges/k3v9x2m7q8wz/cancel")
+
+        self.assertFalse(caught.exception.was_replayed())
 
     def test_network_errors_are_retried_until_the_limit(self) -> None:
         failure = urllib.error.URLError(ConnectionRefusedError(111, "Connection refused"))

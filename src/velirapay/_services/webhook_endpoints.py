@@ -29,7 +29,12 @@ class WebhookEndpointService(Service):
         return WebhookEndpoint(self._request("GET", path("/v1/webhook-endpoints/%s", id)))
 
     def create(self, params: WebhookEndpointCreateParams, *, idempotency_key: str | None = None) -> WebhookEndpoint:
-        """Add an endpoint and send it its verification challenge. The answer carries its signing secret, shown this once, and verification_error while it has not answered."""
+        """Add an endpoint and send it its verification challenge. The answer carries its signing secret, shown this once, and verification_error while it has not answered.
+
+        A ConflictError whose was_replayed() is true means an earlier request with the same idempotency key, such as an
+        attempt whose answer was lost, added the endpoint, and its secret is lost with that answer: rotate the secret,
+        which nothing depends on yet, or delete the endpoint and add it again.
+        """
         return _endpoint(self._respond("POST", "/v1/webhook-endpoints", params, idempotency_key))
 
     def update(
@@ -53,7 +58,13 @@ class WebhookEndpointService(Service):
         return WebhookDelivery(self._request("POST", path("/v1/webhook-endpoints/%s/test", id), None, idempotency_key))
 
     def rotate_secret(self, id: str, *, idempotency_key: str | None = None) -> WebhookEndpoint:
-        """Replace the endpoint's signing secret. The answer carries the new one, shown this once; the old one keeps signing for a day, until previous_secret_expires_at."""
+        """Replace the endpoint's signing secret. The answer carries the new one, shown this once; the old one keeps signing for a day, until previous_secret_expires_at.
+
+        A ConflictError whose was_replayed() is true means an earlier request with the same idempotency key rotated the
+        secret, and the new one is lost with its answer; the secret your receiver has keeps signing for a day. Rotate again
+        only when the new secret can go into the receiver straight away: only one earlier secret is kept, so a second
+        rotation stops the receiver's secret from signing at once.
+        """
         return _endpoint(self._respond("POST", path("/v1/webhook-endpoints/%s/secret", id), None, idempotency_key))
 
     def deliveries(self, id: str, params: WebhookDeliveryListParams | None = None) -> Page[WebhookDelivery]:

@@ -71,7 +71,12 @@ class ApiKeyService(Service):
         yield from self.list(params).auto_paging_iterator()
 
     def create(self, params: ApiKeyCreateParams, *, idempotency_key: str | None = None) -> ApiKey:
-        """Create a key in the API key's mode. Its key attribute holds the key itself, shown this once; leaving permissions out gives full access."""
+        """Create a key in the API key's mode. Its key attribute holds the key itself, shown this once; leaving permissions out gives full access.
+
+        A ConflictError whose was_replayed() is true means an earlier request with the same idempotency key, such as an
+        attempt whose answer was lost, created the key, and the key itself is lost with that answer: find the key with
+        list(), revoke it, and create another.
+        """
         return ApiKey(self._request("POST", "/v1/api-keys", params, idempotency_key))
 
     def update(self, id: str, params: ApiKeyUpdateParams, *, idempotency_key: str | None = None) -> ApiKey:
