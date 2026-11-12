@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
+from datetime import date, datetime
 
+from .._errors import InvalidArgumentError
 from .._page import Page
 from .._params import (
     ActivityListParams,
@@ -20,6 +23,8 @@ from .._resources.member import Invitation, Member
 from .._resources.overview import Overview
 from .._resources.pro_payment import ProPayment
 from ._base import Service, data, meta, path
+
+_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 
 class OverviewService(Service):
@@ -38,8 +43,12 @@ class ActivityService(Service):
     __slots__ = ()
 
     def list(self, params: ActivityListParams | None = None) -> Page[Activity]:
-        """List the account's activity log, newest first: the API key's mode, and what belongs to none, such as sign-ins."""
-        return self._page("/v1/activity", params, Activity)
+        """List the account's activity log, newest first: the API key's mode, and what belongs to none, such as sign-ins.
+
+        from and to take a day, as a date or written as YYYY-MM-DD, and a datetime is taken as its day in its own time zone.
+        Any other string raises an InvalidArgumentError, since the API would ignore it and list the whole log.
+        """
+        return self._page("/v1/activity", _days(params), Activity)
 
     def iterator(self, params: ActivityListParams | None = None) -> Iterator[Activity]:
         """Iterate over the whole activity log, newest first, fetching pages as they are reached."""
@@ -126,3 +135,36 @@ class BillingService(Service):
         response = self._respond("POST", "/v1/billing/pro", params, idempotency_key)
 
         return ProPayment(data(response), meta(response))
+
+
+def _days(params: ActivityListParams | None) -> dict[str, object] | None:
+    """The activity log's filters, with from and to as the days the API reads."""
+    if params is None:
+        return None
+
+    query: dict[str, object] = dict(params)
+
+    for key in ("from", "to"):
+        value = query.get(key)
+
+        if isinstance(value, datetime):
+            query[key] = value.date()
+        elif isinstance(value, str) and value.strip() != "" and not _is_day(value.strip()):
+            raise InvalidArgumentError(
+                f"The activity log's {key} takes a day, as a date or written as YYYY-MM-DD such as 2026-11-01, not {value!r}."
+            )
+
+    return query
+
+
+def _is_day(text: str) -> bool:
+    """Whether a string is a real day written as YYYY-MM-DD."""
+    if not _DAY.fullmatch(text):
+        return False
+
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        return False
+
+    return True

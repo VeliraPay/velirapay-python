@@ -6,6 +6,11 @@ All notable changes to this library are documented here. It follows [Semantic Ve
 
 - Amounts given as numbers are sent as decimal strings without an exponent: the amounts of charges, refunds, simulated payments, invoices and their items, payment links and coupons, and the payment tolerances. A float is rounded to 14 significant digits first, the precision the API reads a number with, so `0.00005` is sent as `"0.00005"` rather than as the `5e-05` the API refused, and `0.1 + 0.2` as `"0.3"`. A float that is not a number, or is infinite, raises an `InvalidArgumentError` before anything is sent. Metadata is sent as it is given.
 - A `datetime` is sent in UTC, such as `created_from` and `created_to` or an `expires_at`, so one in another time zone means the same moment to the API, which read its time as UTC and moved the filter by the offset. A `datetime` without a time zone is taken as UTC, where it raised an `InvalidArgumentError`. A `date` is still sent as its day.
+- `activity.list()` and `iterator()` take a `date` for `from` and `to`, and a `datetime` as its day in its own time zone; `ActivityListParams` types them as `str | date`.
+
+### Breaking
+
+- `activity.list()` and `iterator()` raise an `InvalidArgumentError` for a `from` or `to` that is not a day written as YYYY-MM-DD, such as `"2026-11-01T00:00:00Z"`, before anything is sent: the API ignored it and listed the whole log. A blank one is still sent, and read as no limit.
 
 ## 0.1.0 - 2026-11-12
 

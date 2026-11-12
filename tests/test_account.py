@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import unittest
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 
-from velirapay import AccountCheckout, AccountInvoices, BusinessType, Industry, MonthlyVolume
+from velirapay import AccountCheckout, AccountInvoices, BusinessType, Industry, InvalidArgumentError, MonthlyVolume
 
-from .support import MockTransport, body, client, fixture, path_of, query_of
+from .support import MockTransport, body, client, fixture, list_response, path_of, query_of
 
 
 class AccountTest(unittest.TestCase):
@@ -334,6 +334,33 @@ class AccountTest(unittest.TestCase):
         self.assertEqual("live", entry.mode)
         self.assertEqual({"prefix": "vp_live_aaaa"}, entry.properties)
         self.assertEqual(datetime(2026, 11, 6, 9, 0, tzinfo=UTC), entry.created_at)
+
+    def test_the_activity_log_takes_its_days_as_dates(self) -> None:
+        self.http.json(list_response([])).json(list_response([])).json(list_response([]))
+        velirapay = client(self.http)
+        new_york = timezone(timedelta(hours=-5))
+
+        velirapay.activity.list({"from": date(2026, 11, 1), "to": datetime(2026, 11, 6, 22, 30, tzinfo=new_york)})
+
+        self.assertEqual({"from": "2026-11-01", "to": "2026-11-06"}, query_of(self.http.last_request()))
+
+        list(velirapay.activity.iterator({"from": "2026-11-01", "to": " 2026-11-06 "}))
+
+        self.assertEqual({"from": "2026-11-01", "to": " 2026-11-06 "}, query_of(self.http.last_request()))
+
+        velirapay.activity.list({"from": " ", "action": "sensitive"})
+
+        self.assertEqual({"from": " ", "action": "sensitive"}, query_of(self.http.last_request()))
+
+    def test_a_day_the_activity_log_would_ignore_is_refused_before_a_request_is_sent(self) -> None:
+        for day in ("2026-11-01T00:00:00Z", "01/11/2026", "2026-11-1", "2026-02-30", "20261101", "yesterday"):
+            with self.subTest(day), self.assertRaisesRegex(InvalidArgumentError, "takes a day"):
+                client(self.http).activity.list({"to": day})
+
+        with self.assertRaisesRegex(InvalidArgumentError, "takes a day"):
+            next(client(self.http).activity.iterator({"from": "last week"}))
+
+        self.assertEqual([], self.http.requests)
 
     def test_a_pro_payment_is_started(self) -> None:
         self.http.json(

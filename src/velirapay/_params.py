@@ -283,13 +283,13 @@ ActivityListParams = TypedDict(
         "action": str,
         "person": str,
         "q": str,
-        "from": str,
-        "to": str,
+        "from": str | date,
+        "to": str | date,
         "network": str,
     },
     total=False,
 )
-"""Which entries of the activity log to list. action takes an action or "sensitive", q a subject or the start of an IP address, from and to a YYYY-MM-DD day, and network the key's own mode, to leave out what belongs to none."""
+"""Which entries of the activity log to list. action takes an action or "sensitive", q a subject or the start of an IP address, from and to a day, as a date or written as YYYY-MM-DD, and network the key's own mode, to leave out what belongs to none."""
 
 
 class AssetListParams(TypedDict, total=False):
