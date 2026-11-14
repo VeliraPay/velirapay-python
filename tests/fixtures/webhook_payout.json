@@ -36,6 +36,7 @@
             "exchange_rate": "60000",
             "net_amount": "0.002425",
             "network_fee": "0.0000044",
+            "merchant_network_reserve": null,
             "sent_amount": "0.002425",
             "payout_address": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
             "payout_txid": "cc9a3e0b5629235194a6174d805c55df5554c94e2b4de8dc584db2091cc5cacf",

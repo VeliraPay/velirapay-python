@@ -2,10 +2,37 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from .._enums import PayoutStatus
-from ._base import ApiResource, ResourceList, boolean, integer, nullable_string, string, strings, timestamp
+from ._base import ApiResource, ResourceList, boolean, integer, nullable_string, record, string, strings, timestamp
+
+
+@dataclass(frozen=True, slots=True)
+class NetworkReserve:
+    """What was set aside from the merchant's share for a payout's network costs, in the payout's coin, when its exact cost was not known as it went out."""
+
+    reserved: str
+    """What was set aside at first."""
+
+    payout_cost: str | None
+    """What forwarding the payout cost, from its receipt, or None until that is known."""
+
+    sweep_budget: str
+    """What of it was set aside for later moving VeliraPay's fee to its cold wallet."""
+
+    sweep_cost: str | None
+    """What moving the fee cost, or None until every receipt for it is known."""
+
+    sweep_available: str
+    """What is left of the sweep budget."""
+
+    held: str
+    """What is still held for the merchant, counted conservatively while costs are open."""
+
+    residual: str | None
+    """What went unused once every cost is known, which stays owed to the merchant and is recorded rather than sent back on its own; None while costs are still open."""
 
 
 class Payout(ApiResource):
@@ -72,6 +99,24 @@ class Payout(ApiResource):
     def network_fee(self) -> str | None:
         """What the chain charged, once it has been broadcast."""
         return nullable_string(self._attributes, "network_fee")
+
+    @property
+    def merchant_network_reserve(self) -> NetworkReserve | None:
+        """What was set aside from the merchant's share for network costs, for a payout whose exact cost is not known as it goes out, such as one in ETH, in TRX or over Lightning; None for older charges, payouts not yet sent and payouts whose cost is known up front, such as in the Bitcoin family or in USDT and USDC."""
+        reserve = record(self._attributes, "merchant_network_reserve")
+
+        if reserve is None:
+            return None
+
+        return NetworkReserve(
+            reserved=string(reserve, "reserved", "0"),
+            payout_cost=nullable_string(reserve, "payout_cost"),
+            sweep_budget=string(reserve, "sweep_budget", "0"),
+            sweep_cost=nullable_string(reserve, "sweep_cost"),
+            sweep_available=string(reserve, "sweep_available", "0"),
+            held=string(reserve, "held", "0"),
+            residual=nullable_string(reserve, "residual"),
+        )
 
     @property
     def sent_amount(self) -> str | None:

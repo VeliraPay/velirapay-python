@@ -395,6 +395,23 @@ for row in summary:
 summary.mode  # "live" or "test"
 ```
 
+Under the processing terms charges carry (`charge.processing_terms`), your share pays the network costs of forwarding it. When a payout's exact cost is not known as it goes out, such as one in ETH, in TRX or over Lightning, an estimate is set aside from your share first, and `payout.merchant_network_reserve` follows it as a `NetworkReserve`, in the payout's coin:
+
+```python
+reserve = payout.merchant_network_reserve
+
+if reserve is not None:
+    reserve.reserved         # what was set aside at first
+    reserve.payout_cost      # what forwarding cost, from its receipt, or None until it is known
+    reserve.sweep_budget     # what of it was set aside for moving VeliraPay's fee to its cold wallet
+    reserve.sweep_cost       # what that cost, or None until every receipt is known
+    reserve.sweep_available  # what is left of the sweep budget
+    reserve.held             # what is still held for you, counted conservatively while costs are open
+    reserve.residual         # what went unused once every cost is known, or None until then
+```
+
+The residual stays owed to you and is recorded, not sent back on its own. `merchant_network_reserve` is `None` for older charges, for payouts not yet sent and for payouts whose cost is known up front, such as in Bitcoin, Litecoin, Dogecoin and Bitcoin Cash or in USDT and USDC. Payout webhooks carry it too, with the same amounts.
+
 ### Payout addresses
 
 Payouts go to one address per network family rather than per coin: one Ethereum-style address (`evm`) takes ETH, USDT and USDC on Ethereum, and BNB Chain, Base, Arbitrum One and Polygon each have their own, so nobody is paid on a chain they did not choose. A payout in a coin whose family has no address waits for one, and is never lost.

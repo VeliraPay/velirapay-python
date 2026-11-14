@@ -9,6 +9,7 @@ from typing import Any
 from velirapay import (
     EventType,
     InvalidArgumentError,
+    NetworkReserve,
     ProcessingTerms,
     SignatureVerificationError,
     Webhook,
@@ -153,6 +154,45 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual("0.0000044", payout.network_fee)
         self.assertEqual("cc9a3e0b5629235194a6174d805c55df5554c94e2b4de8dc584db2091cc5cacf", payout.payout_txid)
         self.assertEqual(datetime(2026, 9, 20, 10, 41, 2, tzinfo=UTC), payout.confirmed_at)
+        self.assertIsNone(payout.merchant_network_reserve)
+
+    def test_a_payout_delivery_carries_what_was_set_aside_for_network_costs(self) -> None:
+        delivery = json.loads(payload("webhook_payout"))
+        delivery["event"] = "payout.sent"
+        delivery["data"]["payout"].update(
+            {
+                "status": "sending",
+                "asset": "ETH",
+                "confirmed_at": None,
+                "merchant_network_reserve": {
+                    "reserved": "0.0004",
+                    "payout_cost": None,
+                    "sweep_budget": "0.0001",
+                    "sweep_cost": "0",
+                    "sweep_available": "0.0001",
+                    "held": "0.0001",
+                    "residual": None,
+                },
+            }
+        )
+        raw = json.dumps(delivery)
+
+        event = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET)
+
+        self.assertTrue(event.is_type(EventType.PAYOUT_SENT))
+        assert event.payout is not None
+        self.assertEqual(
+            NetworkReserve(
+                reserved="0.0004",
+                payout_cost=None,
+                sweep_budget="0.0001",
+                sweep_cost="0",
+                sweep_available="0.0001",
+                held="0.0001",
+                residual=None,
+            ),
+            event.payout.merchant_network_reserve,
+        )
 
     def test_only_a_payout_delivery_carries_a_payout(self) -> None:
         self.assertIsNone(signed("webhook_charge").payout)
