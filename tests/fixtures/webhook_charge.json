@@ -12,6 +12,11 @@
             "fiat_currency": "EUR",
             "asset": "BTC",
             "asset_amount": "0.002500000000000000",
+            "processing_terms": {
+                "percent": "1.75",
+                "max_forwarding_percent": 10
+            },
+            "switched_from": null,
             "received_amount": "0.002500000000000000",
             "remaining_amount": "0",
             "overpaid": false,

@@ -188,6 +188,8 @@ velirapay.charges.cancel("k3v9x2m7q8wz")
 
 A charge in `BTC_LIGHTNING`, Bitcoin over Lightning when it is on offer, is paid with a Lightning invoice: `charge.payment_request` is the BOLT11 invoice to show the customer, as a `lightning:` link or a QR code, and `charge.deposit_address` its payment hash. `payment_request` is `None` for every other coin.
 
+`charge.processing_terms` holds the terms fixed when the charge was quoted, as a `ProcessingTerms`: `percent`, the processing fee in percent of what is paid, leaving out any network surcharge, such as `"1.75"`, and `max_forwarding_percent`, the most passing the payment on to you may cost, in percent of your share after the fee, an `int` such as `10`. It is `None` for older charges and for VeliraPay's own billing.
+
 `metadata` holds up to 20 keys of at most 40 characters each. Values are strings, numbers, booleans or `None`, and a string is at most 500 characters.
 
 The accounts of one owner can create 300 charges in each mode within 30 minutes, through the API, the MCP server and the dashboard together, and 30 until one of them has been paid in live mode. Canceled charges count, paid live ones do not, and payments customers start on the hosted checkout are not counted. Past that, `create()` raises a `RateLimitError` whose `retry_after()` says how many seconds to wait.
@@ -238,6 +240,19 @@ velirapay.charges.record_refund("k3v9x2m7q8wz", {"amount": "0.0005", "txid": "7d
 ```
 
 `accept()` raises a `ConflictError` while a payment to an underpaid charge is still confirming, and for a charge that is neither underpaid nor late. VeliraPay never sends money back on its own: `record_refund()` records a refund you made yourself, and tells the customer by email when the charge has their address. An underpaid charge or a late payment has to be accepted before it can be refunded, and the network surcharge never can be.
+
+TRX and USDT on Tron (`USDT_TRON`) share deposit addresses. When a charge in one of them closes, expired or canceled, with nothing of its own coin while the other arrived at its address, VeliraPay quotes it again in the coin that arrived: `asset`, `asset_amount`, `exchange_rate` and `network_surcharge` then describe that coin, `fiat_amount` stays the same, and `charge.switched_from` keeps the first quote as an `OriginalQuote`. The transfer waits as a late payment, announced with `charge.late_payment`, for you to accept, and `charge.paid` and what follows it are in the new coin. A charge switches at most once, and `switched_from` is `None` for every other charge, so read the coin from each charge you get rather than remembering the one you created it with.
+
+```python
+first = charge.switched_from
+
+if first is not None:
+    first.asset          # "TRX", the coin the charge first asked for
+    first.asset_amount   # "36.633334"
+    first.exchange_rate  # "0.3"
+    first.switched_at    # when it was quoted again
+    charge.asset         # "USDT_TRON", the coin that arrived
+```
 
 ## Invoices
 
@@ -519,6 +534,7 @@ Some things to know:
 - **Failed deliveries are retried.** A delivery is tried 14 times over about 3 days: after 1 minute, 5 minutes, 30 minutes, 1 hour, 2 hours, 4 hours and 8 hours, then every 10 hours. When one runs out of attempts, the account's owners and admins are emailed, at most once a day per endpoint, and an endpoint that fails 15 deliveries in a row is switched off until you switch it back on. The endpoint's delivery log keeps every attempt for 30 days, and can send a delivery again.
 - **Skip duplicates by event.** A retried delivery keeps its id (`event.id`, also the `X-VeliraPay-Delivery` header), but each endpoint gets its own copy of an event under its own id. `event.event_id` is the same on every copy and is the event's id in the events API, so `event.event_id or event.id` is the key to remember.
 - **Fulfil once.** A paid invoice sends both `charge.paid`, for the charge that paid it, and `invoice.paid`. Fulfil on one of them, not both.
+- **Read the coin from each payload.** A charge's `asset` can change once, when it is quoted again in the coin the customer sent ([Short and late payments](#short-and-late-payments)), so take the coin and its amounts from the charge in each delivery rather than the one you created it with.
 - **Deliveries can arrive out of order.** When the order matters, fetch the current state with `velirapay.charges.retrieve(event.charge.id)` rather than trusting the payload.
 - **Test deliveries.** `webhook_endpoints.test()` and the dashboard's "Send test event" button send a sample `charge.paid` with `event.test` set to `True` and no `event_id`. Its charge is a made-up sample without many of a real one's fields, such as `transactions` and `customer`.
 
@@ -528,7 +544,7 @@ Some things to know:
 
 The charge and invoice in a delivery are not quite the ones the API answers with:
 
-- A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`). Compare amounts as numbers, such as with `Decimal`, not as strings.
+- A charge's coin amounts and exchange rate, and those of its `switched_from`, carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`). Compare amounts as numbers, such as with `Decimal`, not as strings.
 - A charge has no `timeline`, `refunds`, `checkout_url`, `receipt_url`, `success_url`, `cancel_url` or `success_message`. Its payment link and invoice carry more than their codes: `charge.payment_link_title` and `charge.invoice_number`, which are `None` on the charges the API answers with.
 - An invoice has no `overdue`, `document_url`, `success_url` or `cancel_url`; all four are `None`.
 - `charge.refunded` carries no refund. Read its amount, txid and reason from the event, with `velirapay.events.retrieve(event.event_id).details`.

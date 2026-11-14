@@ -7,7 +7,16 @@ import unittest
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 
-from velirapay import Asset, Charge, ChargeStatus, ChargeTimelineEntry, CustomFieldAnswer, InvalidArgumentError
+from velirapay import (
+    Asset,
+    Charge,
+    ChargeStatus,
+    ChargeTimelineEntry,
+    CustomFieldAnswer,
+    InvalidArgumentError,
+    OriginalQuote,
+    ProcessingTerms,
+)
 
 from .support import MockTransport, body, client, fixture, list_response, path_of, query_of
 
@@ -110,6 +119,8 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("BTC", charge.asset)
         self.assertEqual("0.0025", charge.asset_amount)
         self.assertIsNone(charge.network_surcharge)
+        self.assertEqual(ProcessingTerms(percent="1.75", max_forwarding_percent=10), charge.processing_terms)
+        self.assertIsNone(charge.switched_from)
         self.assertEqual("0.0025", charge.received_amount)
         self.assertEqual("0", charge.remaining_amount)
         self.assertFalse(charge.overpaid)
@@ -174,6 +185,58 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("152.5", charge.asset_amount)
         self.assertEqual("2.5", charge.network_surcharge)
         self.assertIsNone(charge.payment_request)
+
+    def test_a_charge_quoted_again_in_the_coin_that_arrived_keeps_its_first_quote(self) -> None:
+        self.http.json(
+            {
+                "data": {
+                    **fixture("charge"),
+                    "status": "expired",
+                    "fiat_amount": "10.99",
+                    "fiat_currency": "USD",
+                    "asset": "USDT_TRON",
+                    "asset_amount": "13.49",
+                    "network_surcharge": "2.5",
+                    "exchange_rate": "1",
+                    "deposit_address": "TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW",
+                    "switched_from": {
+                        "asset": "TRX",
+                        "asset_amount": "36.633334",
+                        "exchange_rate": "0.3",
+                        "switched_at": "2026-11-14T12:05:49.000000Z",
+                    },
+                }
+            }
+        )
+
+        charge = client(self.http).charges.retrieve("k3v9x2m7q8wz")
+
+        self.assertEqual(Asset.USDT_TRON, charge.asset)
+        self.assertEqual("13.49", charge.asset_amount)
+        self.assertEqual("2.5", charge.network_surcharge)
+        self.assertEqual("1", charge.exchange_rate)
+        self.assertEqual("10.99", charge.fiat_amount)
+        self.assertEqual(
+            OriginalQuote(
+                asset=Asset.TRX,
+                asset_amount="36.633334",
+                exchange_rate="0.3",
+                switched_at=datetime(2026, 11, 14, 12, 5, 49, tzinfo=UTC),
+            ),
+            charge.switched_from,
+        )
+        self.assertEqual(ProcessingTerms(percent="1.75", max_forwarding_percent=10), charge.processing_terms)
+
+    def test_a_charge_without_processing_terms_or_a_first_quote_reads_them_as_none(self) -> None:
+        older = fixture("charge")
+        del older["processing_terms"], older["switched_from"]
+
+        for label, attributes in (("null", {**fixture("charge"), "processing_terms": None}), ("absent", older)):
+            with self.subTest(label):
+                charge = Charge(attributes)
+
+                self.assertIsNone(charge.processing_terms)
+                self.assertIsNone(charge.switched_from)
 
     def test_a_lightning_charge_reads_its_invoice(self) -> None:
         invoice = "lnbc2500u1pjq8w4xpp5qy9nkv7r0v4e5n2s7a3xg6m8d0l2c4f6h8j0k2m4n6p8r0t2v4x6z8sdqqcqzzsxqyz5vq"
@@ -337,7 +400,15 @@ class ChargeTest(unittest.TestCase):
 
     def test_attributes_of_an_unexpected_type_read_as_their_defaults(self) -> None:
         charge = Charge(
-            {"status": None, "overpaid": "yes", "transactions": "none", "metadata": [], "expires_at": "soon"}
+            {
+                "status": None,
+                "overpaid": "yes",
+                "transactions": "none",
+                "metadata": [],
+                "expires_at": "soon",
+                "processing_terms": [],
+                "switched_from": "TRX",
+            }
         )
 
         self.assertEqual("", charge.status)
@@ -346,6 +417,8 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual({}, charge.metadata)
         self.assertIsNone(charge.expires_at)
         self.assertEqual("0", charge.fiat_amount)
+        self.assertIsNone(charge.processing_terms)
+        self.assertIsNone(charge.switched_from)
 
     def test_counts_given_as_strings_of_digits_are_read_within_reason(self) -> None:
         transaction = Charge({"transactions": [{"confirmations": "0012"}, {"confirmations": "9" * 5000}]}).transactions

@@ -11,6 +11,11 @@
     "discount_amount": null,
     "asset": "BTC",
     "asset_amount": "0.0025",
+    "processing_terms": {
+        "percent": "1.75",
+        "max_forwarding_percent": 10
+    },
+    "switched_from": null,
     "received_amount": "0.0025",
     "remaining_amount": "0",
     "overpaid": false,

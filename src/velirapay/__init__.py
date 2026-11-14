@@ -87,7 +87,16 @@ from ._resources._base import ApiResource
 from ._resources.account import Account, AccountBusiness, AccountCheckout, AccountInvoices, Address
 from ._resources.activity import Activity
 from ._resources.api_key import ApiKey
-from ._resources.charge import Charge, ChargeTimelineEntry, Customer, CustomFieldAnswer, Refund, Transaction
+from ._resources.charge import (
+    Charge,
+    ChargeTimelineEntry,
+    Customer,
+    CustomFieldAnswer,
+    OriginalQuote,
+    ProcessingTerms,
+    Refund,
+    Transaction,
+)
 from ._resources.coupon import Coupon
 from ._resources.event import Event
 from ._resources.invoice import Invoice, InvoiceCharge, InvoiceItem
@@ -217,6 +226,7 @@ __all__ = [
     "Moment",
     "MonthlyVolume",
     "NotFoundError",
+    "OriginalQuote",
     "Overview",
     "OverviewAsset",
     "OverviewAttention",
@@ -253,6 +263,7 @@ __all__ = [
     "PricingType",
     "ProPayment",
     "ProPaymentParams",
+    "ProcessingTerms",
     "RateLimitError",
     "Refund",
     "RefundParams",

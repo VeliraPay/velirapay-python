@@ -44,8 +44,36 @@ class CustomFieldAnswer:
     """What was answered."""
 
 
+@dataclass(frozen=True, slots=True)
+class OriginalQuote:
+    """The quote a charge had before it was quoted again in the coin the customer actually sent."""
+
+    asset: str
+    """The coin the charge first asked for, one of the Asset values such as "TRX"."""
+
+    asset_amount: str
+    """The amount of that coin it first asked for."""
+
+    exchange_rate: str
+    """Fiat per one unit of that coin, as first locked."""
+
+    switched_at: datetime | None
+    """When the charge was quoted again."""
+
+
+@dataclass(frozen=True, slots=True)
+class ProcessingTerms:
+    """The processing fee and forwarding limit fixed when a charge was quoted."""
+
+    percent: str
+    """The processing fee, in percent of what is paid, leaving out any network surcharge."""
+
+    max_forwarding_percent: int
+    """The most passing the payment on may cost, in percent of the merchant's share after the fee."""
+
+
 class Charge(ApiResource):
-    """A single payment in one coin, with the rate locked and a deposit address of its own."""
+    """A single payment in one coin, with the rate locked and a deposit address of its own; the coin can change once, see switched_from."""
 
     __slots__ = ()
 
@@ -100,18 +128,46 @@ class Charge(ApiResource):
 
     @property
     def asset(self) -> str:
-        """The coin and network paid with, one of the Asset values such as "BTC" or "USDT"."""
+        """The coin and network paid with, one of the Asset values such as "BTC" or "USDT"; it can change once, when the charge is quoted again in the coin the customer sent, see switched_from."""
         return string(self._attributes, "asset")
 
     @property
     def asset_amount(self) -> str:
-        """The exact amount of the coin to send."""
+        """The exact amount of the coin to send, in the charge's current coin."""
         return string(self._attributes, "asset_amount", "0")
 
     @property
     def network_surcharge(self) -> str | None:
         """What of asset_amount the customer pays on top of the price for the network, which VeliraPay keeps; None for a coin without one."""
         return nullable_string(self._attributes, "network_surcharge")
+
+    @property
+    def processing_terms(self) -> ProcessingTerms | None:
+        """The processing fee and forwarding limit fixed when the charge was quoted; None for older charges and VeliraPay's own billing."""
+        terms = record(self._attributes, "processing_terms")
+
+        if terms is None:
+            return None
+
+        return ProcessingTerms(
+            percent=string(terms, "percent", "0"),
+            max_forwarding_percent=integer(terms, "max_forwarding_percent"),
+        )
+
+    @property
+    def switched_from(self) -> OriginalQuote | None:
+        """The charge's first quote, when it closed with nothing of its own coin while the other coin sharing its address arrived and it was quoted again in that one; None for almost every charge."""
+        first = record(self._attributes, "switched_from")
+
+        if first is None:
+            return None
+
+        return OriginalQuote(
+            asset=string(first, "asset"),
+            asset_amount=string(first, "asset_amount", "0"),
+            exchange_rate=string(first, "exchange_rate", "0"),
+            switched_at=timestamp(first, "switched_at"),
+        )
 
     @property
     def received_amount(self) -> str | None:
@@ -140,7 +196,7 @@ class Charge(ApiResource):
 
     @property
     def exchange_rate(self) -> str:
-        """Fiat per one unit of the coin, locked when the charge was created."""
+        """Fiat per one unit of the coin, locked when the charge was created, or when it was quoted again in another coin."""
         return string(self._attributes, "exchange_rate", "0")
 
     @property

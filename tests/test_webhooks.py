@@ -6,7 +6,14 @@ import unittest
 from datetime import UTC, date, datetime
 from typing import Any
 
-from velirapay import EventType, InvalidArgumentError, SignatureVerificationError, Webhook, WebhookEvent
+from velirapay import (
+    EventType,
+    InvalidArgumentError,
+    ProcessingTerms,
+    SignatureVerificationError,
+    Webhook,
+    WebhookEvent,
+)
 
 from .support import payload
 
@@ -43,6 +50,8 @@ class WebhookTest(unittest.TestCase):
         self.assertIsNone(charge.invoice)
         self.assertIsNone(charge.invoice_number)
         self.assertEqual("0.002500000000000000", charge.asset_amount)
+        self.assertEqual(ProcessingTerms(percent="1.75", max_forwarding_percent=10), charge.processing_terms)
+        self.assertIsNone(charge.switched_from)
         self.assertEqual(2, charge.transactions[0].confirmations)
         self.assertEqual(2, charge.transactions[0].required_confirmations)
         self.assertEqual("203.0.113.7", charge.customer.ip_address)
@@ -68,6 +77,48 @@ class WebhookTest(unittest.TestCase):
         self.assertIsNone(charge.customer.ip_country)
         self.assertIsNone(charge.customer.ip_asn)
         self.assertIsNone(charge.customer.ip_network)
+
+    def test_a_late_payment_to_a_charge_quoted_again_in_the_coin_that_arrived_carries_its_first_quote(self) -> None:
+        delivery = json.loads(payload("webhook_charge"))
+        delivery["event"] = "charge.late_payment"
+        delivery["data"]["charge"].update(
+            {
+                "status": "expired",
+                "fiat_amount": "10.99",
+                "fiat_currency": "USD",
+                "asset": "USDT_TRON",
+                "asset_amount": "13.490000000000000000",
+                "network_surcharge": "2.500000000000000000",
+                "exchange_rate": "1.000000000000000000",
+                "switched_from": {
+                    "asset": "TRX",
+                    "asset_amount": "36.633334000000000000",
+                    "exchange_rate": "0.300000000000000000",
+                    "switched_at": "2026-11-14T12:05:49.000000Z",
+                },
+                "paid_at": None,
+            }
+        )
+        raw = json.dumps(delivery)
+
+        event = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET)
+
+        self.assertTrue(event.is_type(EventType.CHARGE_LATE_PAYMENT))
+        charge = event.charge
+        assert charge is not None
+        self.assertTrue(charge.is_expired())
+        self.assertEqual("USDT_TRON", charge.asset)
+        self.assertEqual("13.490000000000000000", charge.asset_amount)
+        self.assertEqual("2.500000000000000000", charge.network_surcharge)
+        self.assertEqual("1.000000000000000000", charge.exchange_rate)
+        self.assertEqual(ProcessingTerms(percent="1.75", max_forwarding_percent=10), charge.processing_terms)
+
+        first = charge.switched_from
+        assert first is not None
+        self.assertEqual("TRX", first.asset)
+        self.assertEqual("36.633334000000000000", first.asset_amount)
+        self.assertEqual("0.300000000000000000", first.exchange_rate)
+        self.assertEqual(datetime(2026, 11, 14, 12, 5, 49, tzinfo=UTC), first.switched_at)
 
     def test_a_payment_detected_delivery_carries_the_transfer_that_was_seen(self) -> None:
         event = signed("webhook_payment_detected")
