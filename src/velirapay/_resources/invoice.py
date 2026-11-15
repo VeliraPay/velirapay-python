@@ -24,7 +24,7 @@ class InvoiceCharge:
 
 
 class Invoice(ApiResource):
-    """A bill sent to one customer, paid through a hosted page in the coin they choose."""
+    """A bill, addressed to one customer or to nobody, paid through a hosted page in the coin the customer chooses."""
 
     __slots__ = ()
 
@@ -45,18 +45,18 @@ class Invoice(ApiResource):
 
     @property
     def overdue(self) -> bool | None:
-        """Whether the invoice is open past its due date; absent from webhooks."""
+        """Whether the invoice is open past its due date; None in a delivery sent before webhooks carried it."""
         return nullable_bool(self._attributes, "overdue")
 
     @property
-    def customer_name(self) -> str:
-        """The customer's name."""
-        return string(self._attributes, "customer_name")
+    def customer_name(self) -> str | None:
+        """Who the invoice is addressed to, or None when it names nobody."""
+        return nullable_string(self._attributes, "customer_name")
 
     @property
-    def customer_email(self) -> str:
-        """The customer's email address."""
-        return string(self._attributes, "customer_email")
+    def customer_email(self) -> str | None:
+        """Where the invoice and the receipt are emailed, or None when it has no address, and then cannot be sent."""
+        return nullable_string(self._attributes, "customer_email")
 
     @property
     def memo(self) -> str | None:
@@ -84,13 +84,18 @@ class Invoice(ApiResource):
         return calendar_day(self._attributes, "due_at")
 
     @property
+    def expires_at(self) -> datetime | None:
+        """When the invoice stops taking new payments, or None when it stays open until paid or voided."""
+        return timestamp(self._attributes, "expires_at")
+
+    @property
     def hosted_url(self) -> str:
         """The page where the customer pays."""
         return string(self._attributes, "hosted_url")
 
     @property
     def document_url(self) -> str | None:
-        """The printable invoice; absent from webhooks."""
+        """The printable invoice; None in a delivery sent before webhooks carried it."""
         return nullable_string(self._attributes, "document_url")
 
     @property
@@ -132,16 +137,21 @@ class Invoice(ApiResource):
 
     @property
     def success_url(self) -> str | None:
-        """The page the customer is offered a button back to once they have paid; absent from webhooks."""
+        """The page the customer is offered a button back to once they have paid."""
         return nullable_string(self._attributes, "success_url")
 
     @property
     def cancel_url(self) -> str | None:
-        """The page the customer can go back to from the invoice without paying; absent from webhooks."""
+        """The page the customer can go back to from the invoice without paying."""
         return nullable_string(self._attributes, "cancel_url")
 
+    @property
+    def success_message(self) -> str | None:
+        """What the customer is told once they have paid, or None when the account's own message applies."""
+        return nullable_string(self._attributes, "success_message")
+
     def is_open(self) -> bool:
-        """Whether the invoice can still be paid."""
+        """Whether the invoice can still be paid; past its expires_at, only a payment already started can be finished."""
         return self.status == InvoiceStatus.OPEN
 
     def is_paid(self) -> bool:

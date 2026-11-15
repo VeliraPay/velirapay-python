@@ -17,7 +17,7 @@ class InvoiceService(Service):
     __slots__ = ()
 
     def create(self, params: InvoiceCreateParams, *, idempotency_key: str | None = None) -> Invoice:
-        """Create an invoice, for a total or a list of items, and optionally email it to the customer. A datetime due_at is sent as its day, in its own time zone."""
+        """Create an invoice, for a total or a list of items, and optionally email it to the customer. A datetime due_at is sent as its day, in its own time zone, and a datetime expires_at as that moment, in UTC."""
         body = amounts(params, "amount")
         due_at = body.get("due_at")
         items = body.get("items")
@@ -45,7 +45,7 @@ class InvoiceService(Service):
         yield from self.list(params).auto_paging_iterator()
 
     def send(self, id: str, *, idempotency_key: str | None = None) -> Invoice:
-        """Email an open invoice to its customer, as a reminder when it was sent before."""
+        """Email an open invoice to its customer, as a reminder when it was sent before. One without a customer email raises a ValidationError on customer_email, and one that is no longer open or has expired a ConflictError."""
         return Invoice(self._request("POST", path("/v1/invoices/%s/send", id), None, idempotency_key))
 
     def void(self, id: str, *, idempotency_key: str | None = None) -> Invoice:

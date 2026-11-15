@@ -222,11 +222,38 @@ class WebhookTest(unittest.TestCase):
         assert invoice is not None
         self.assertEqual("w7c2h5j9d3kx", invoice.id)
         self.assertTrue(invoice.is_paid())
+        self.assertEqual("Grace Hopper", invoice.customer_name)
+        self.assertIs(False, invoice.overdue)
+        self.assertEqual("https://velirapay.com/i/w7c2h5j9d3kx/document", invoice.document_url)
+        self.assertEqual("https://example.com/orders/1042", invoice.success_url)
+        self.assertIsNone(invoice.cancel_url)
+        self.assertEqual("Thank you, your licence is on its way.", invoice.success_message)
+        self.assertEqual(datetime(2026, 10, 31, 23, 59, 59, tzinfo=UTC), invoice.expires_at)
+        self.assertEqual(["m2q7w4e9r1ty", "z8x6c4v2b0nm"], [charge.id for charge in invoice.charges])
+        self.assertEqual(date(2026, 10, 15), invoice.due_at)
+
+    def test_an_invoice_delivery_naming_nobody_or_sent_before_it_carried_everything_reads_as_none(self) -> None:
+        delivery = json.loads(payload("webhook_invoice"))
+        invoice_data = delivery["data"]["invoice"]
+        invoice_data["customer_name"] = None
+        invoice_data["customer_email"] = None
+
+        for key in ("expires_at", "overdue", "document_url", "success_url", "cancel_url", "success_message"):
+            del invoice_data[key]
+
+        raw = json.dumps(delivery)
+
+        invoice = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET).invoice
+
+        assert invoice is not None
+        self.assertIsNone(invoice.customer_name)
+        self.assertIsNone(invoice.customer_email)
+        self.assertIsNone(invoice.expires_at)
         self.assertIsNone(invoice.overdue)
         self.assertIsNone(invoice.document_url)
         self.assertIsNone(invoice.success_url)
-        self.assertEqual(["m2q7w4e9r1ty", "z8x6c4v2b0nm"], [charge.id for charge in invoice.charges])
-        self.assertEqual(date(2026, 10, 15), invoice.due_at)
+        self.assertIsNone(invoice.cancel_url)
+        self.assertIsNone(invoice.success_message)
 
     def test_signatures_made_by_velirapay_are_accepted(self) -> None:
         raw = '{"id":"5f0c6f5e-8d1b-4a53-9a57-3c2b1d0e9f87","event_id":"9b1f7a3e-2c4d-4e8f-a6b0-1d2c3e4f5a6b","event":"charge.paid","mode":"live","created_at":"2026-09-20T10:05:42.000000Z","data":{"charge":{"code":"k3v9x2m7q8wz","status":"paid"}}}'

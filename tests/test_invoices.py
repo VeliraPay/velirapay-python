@@ -46,6 +46,54 @@ class InvoiceTest(unittest.TestCase):
                 self.assertEqual("10", sent["items"][0]["quantity"])
                 self.assertEqual("w7c2h5j9d3kx", invoice.id)
 
+    def test_an_invoice_closes_at_a_moment_sent_in_utc_or_at_the_end_of_a_day(self) -> None:
+        new_york = timezone(timedelta(hours=-4))
+
+        for expires_at, sent in (
+            (datetime(2026, 10, 31, 20, 0, tzinfo=new_york), "2026-11-01T00:00:00+00:00"),
+            (date(2026, 10, 31), "2026-10-31"),
+            ("2026-10-31T23:59:59+02:00", "2026-10-31T23:59:59+02:00"),
+        ):
+            with self.subTest(expires_at):
+                self.http.json({"data": fixture("invoice")}, 201)
+
+                client(self.http).invoices.create(
+                    {
+                        "customer_name": "Grace Hopper",
+                        "customer_email": "grace@example.com",
+                        "currency": "USD",
+                        "amount": "1250.00",
+                        "due_at": datetime(2026, 10, 15, 21, 30, tzinfo=new_york),
+                        "expires_at": expires_at,
+                        "success_message": "Thank you, your licence is on its way.",
+                    }
+                )
+
+                request = body(self.http.last_request())
+                self.assertEqual(sent, request["expires_at"])
+                self.assertEqual("2026-10-15", request["due_at"])
+                self.assertEqual("Thank you, your licence is on its way.", request["success_message"])
+
+    def test_an_invoice_can_be_created_for_nobody_in_particular(self) -> None:
+        nobody = {**fixture("invoice"), "customer_name": None, "customer_email": None}
+        self.http.json({"data": nobody}, 201).json({"data": nobody}, 201)
+        velirapay = client(self.http)
+
+        invoice = velirapay.invoices.create({"currency": "USD", "amount": "1250.00"})
+
+        self.assertEqual({"currency": "USD", "amount": "1250.00"}, body(self.http.last_request()))
+        self.assertIsNone(invoice.customer_name)
+        self.assertIsNone(invoice.customer_email)
+
+        velirapay.invoices.create(
+            {"customer_name": None, "customer_email": None, "currency": "USD", "amount": "1250.00"}
+        )
+
+        self.assertEqual(
+            {"customer_name": None, "customer_email": None, "currency": "USD", "amount": "1250.00"},
+            body(self.http.last_request()),
+        )
+
     def test_the_amounts_of_a_new_invoice_are_sent_as_decimal_strings(self) -> None:
         self.http.json({"data": fixture("invoice")}, 201).json({"data": fixture("invoice")}, 201)
         velirapay = client(self.http)
@@ -95,10 +143,12 @@ class InvoiceTest(unittest.TestCase):
         self.assertEqual("100.00", invoice.items[1].unit_amount)
         self.assertEqual("250.00", invoice.items[1].total)
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
+        self.assertEqual(datetime(2026, 10, 31, 23, 59, 59, tzinfo=UTC), invoice.expires_at)
         self.assertEqual("https://velirapay.com/i/w7c2h5j9d3kx", invoice.hosted_url)
         self.assertEqual("https://velirapay.com/i/w7c2h5j9d3kx/document", invoice.document_url)
         self.assertEqual("https://example.com/orders/1042", invoice.success_url)
         self.assertIsNone(invoice.cancel_url)
+        self.assertEqual("Thank you, your licence is on its way.", invoice.success_message)
         self.assertEqual([InvoiceCharge(id="m2q7w4e9r1ty", status="expired", asset="ETH")], invoice.charges)
         self.assertEqual(datetime(2026, 9, 21, 8, 0, tzinfo=UTC), invoice.sent_at)
         self.assertIsNone(invoice.paid_at)

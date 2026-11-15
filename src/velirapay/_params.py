@@ -126,17 +126,19 @@ class InvoiceItemParams(TypedDict):
 
 
 class InvoiceCreateParams(TypedDict, total=False):
-    """A new invoice, for a single amount or a list of items. due_at is a day, as YYYY-MM-DD or a date."""
+    """A new invoice, for a single amount or a list of items. customer_name and customer_email are optional, but send_email needs customer_email; due_at is a day, as YYYY-MM-DD or a date; expires_at is when it stops taking new payments, a day meaning 23:59:59 UTC that day."""
 
-    customer_name: Required[str]
-    customer_email: Required[str]
+    customer_name: str | None
+    customer_email: str | None
     currency: Required[Currency | str]
     amount: Amount
     items: Sequence[InvoiceItemParams]
     memo: str | None
     due_at: str | date | None
+    expires_at: Moment | None
     success_url: str | None
     cancel_url: str | None
+    success_message: str | None
     send_email: bool
 
 
