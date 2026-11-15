@@ -232,10 +232,10 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual(["m2q7w4e9r1ty", "z8x6c4v2b0nm"], [charge.id for charge in invoice.charges])
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
 
-    def test_an_invoice_delivery_naming_nobody_or_sent_before_it_carried_everything_reads_as_none(self) -> None:
+    def test_an_invoice_delivery_without_an_email_or_sent_before_it_carried_everything_reads_as_none(self) -> None:
         delivery = json.loads(payload("webhook_invoice"))
         invoice_data = delivery["data"]["invoice"]
-        invoice_data["customer_name"] = None
+        invoice_data["customer_name"] = "buyer_1042"
         invoice_data["customer_email"] = None
 
         for key in ("expires_at", "overdue", "document_url", "success_url", "cancel_url", "success_message"):
@@ -246,7 +246,7 @@ class WebhookTest(unittest.TestCase):
         invoice = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET).invoice
 
         assert invoice is not None
-        self.assertIsNone(invoice.customer_name)
+        self.assertEqual("buyer_1042", invoice.customer_name)
         self.assertIsNone(invoice.customer_email)
         self.assertIsNone(invoice.expires_at)
         self.assertIsNone(invoice.overdue)

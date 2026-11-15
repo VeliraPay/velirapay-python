@@ -24,7 +24,7 @@ class InvoiceCharge:
 
 
 class Invoice(ApiResource):
-    """A bill, addressed to one customer or to nobody, paid through a hosted page in the coin the customer chooses."""
+    """A bill addressed to one customer, by name, email or both, paid through a hosted page in the coin they choose."""
 
     __slots__ = ()
 
@@ -50,12 +50,12 @@ class Invoice(ApiResource):
 
     @property
     def customer_name(self) -> str | None:
-        """Who the invoice is addressed to, or None when it names nobody."""
+        """Who the invoice is addressed to, such as a name or a username, or None when it gives only an email address."""
         return nullable_string(self._attributes, "customer_name")
 
     @property
     def customer_email(self) -> str | None:
-        """Where the invoice and the receipt are emailed, or None when it has no address, and then cannot be sent."""
+        """Where the invoice and the receipt are emailed, or None when it gives only a name, and then cannot be sent."""
         return nullable_string(self._attributes, "customer_email")
 
     @property

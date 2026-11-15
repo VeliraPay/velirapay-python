@@ -126,7 +126,7 @@ class InvoiceItemParams(TypedDict):
 
 
 class InvoiceCreateParams(TypedDict, total=False):
-    """A new invoice, for a single amount or a list of items. customer_name and customer_email are optional, but send_email needs customer_email; due_at is a day, as YYYY-MM-DD or a date; expires_at is when it stops taking new payments, a day meaning 23:59:59 UTC that day."""
+    """A new invoice, for a single amount or a list of items. It names its customer by customer_name, customer_email or both, a name such as a username being enough, and send_email needs customer_email; due_at is a day, as YYYY-MM-DD or a date; expires_at is when it stops taking new payments, a day meaning 23:59:59 UTC that day."""
 
     customer_name: str | None
     customer_email: str | None

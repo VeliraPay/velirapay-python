@@ -17,7 +17,7 @@ class InvoiceService(Service):
     __slots__ = ()
 
     def create(self, params: InvoiceCreateParams, *, idempotency_key: str | None = None) -> Invoice:
-        """Create an invoice, for a total or a list of items, and optionally email it to the customer. A datetime due_at is sent as its day, in its own time zone, and a datetime expires_at as that moment, in UTC."""
+        """Create an invoice, for a total or a list of items, and optionally email it to the customer. It names the customer by customer_name, customer_email or both, and one with neither raises a ValidationError on customer_name. A datetime due_at is sent as its day, in its own time zone, and a datetime expires_at as that moment, in UTC."""
         body = amounts(params, "amount")
         due_at = body.get("due_at")
         items = body.get("items")

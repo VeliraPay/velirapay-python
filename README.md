@@ -263,8 +263,8 @@ from datetime import date, timedelta
 
 invoice = velirapay.invoices.create(
     {
-        "customer_name": "Grace Hopper",  # optional
-        "customer_email": "grace@example.com",  # optional, but needed to email it
+        "customer_name": "Grace Hopper",  # a name, an email or both
+        "customer_email": "grace@example.com",  # needed to email it
         "currency": "USD",
         "items": [
             {"description": "Consulting", "quantity": "10", "unit_amount": "100.00"},
@@ -290,7 +290,7 @@ hers = velirapay.invoices.list({"search": "grace@example.com"})
 
 Pass `amount` instead of `items` to bill a single total. Either way the invoice comes to at least the lowest price of its currency, though its items may each cost less.
 
-`customer_name` and `customer_email` are optional. An invoice that names nobody can be paid by whoever has its `hosted_url`, and reads both back as `None`. Without a `customer_email` it cannot be emailed: `create()` with `send_email` raises a `ValidationError` on `customer_email` and creates nothing, and `send()` raises the same.
+An invoice names its customer by `customer_name`, `customer_email` or both. A name alone, such as the buyer's username on your site, is enough, and `customer_email` then reads back as `None`, as `customer_name` does for an email alone. Leaving out both raises a `ValidationError` on `customer_name` and creates nothing. Without a `customer_email` an invoice cannot be emailed: `create()` with `send_email` raises a `ValidationError` on `customer_email` and creates nothing, and `send()` raises the same.
 
 `expires_at`, a `datetime`, a `date` or an ISO 8601 string, is when the invoice stops taking new payments; without it, the invoice stays open until it is paid or voided. A payment the customer already started can still be finished in its coin, but `send()` raises a `ConflictError` once the invoice has expired. An invoice still unpaid once it has closed, with no payment under way, is voided on its own: its `status` becomes `"void"`, `voided_at` is set and `invoice.voided` is sent. `success_message` is what the customer is told once they have paid; left out, your account's own message applies.
 

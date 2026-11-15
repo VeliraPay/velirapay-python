@@ -74,25 +74,30 @@ class InvoiceTest(unittest.TestCase):
                 self.assertEqual("2026-10-15", request["due_at"])
                 self.assertEqual("Thank you, your licence is on its way.", request["success_message"])
 
-    def test_an_invoice_can_be_created_for_nobody_in_particular(self) -> None:
-        nobody = {**fixture("invoice"), "customer_name": None, "customer_email": None}
-        self.http.json({"data": nobody}, 201).json({"data": nobody}, 201)
+    def test_an_invoice_can_name_its_customer_by_a_name_or_an_email_alone(self) -> None:
+        by_name = {**fixture("invoice"), "customer_name": "buyer_1042", "customer_email": None}
+        by_email = {**fixture("invoice"), "customer_name": None}
+        self.http.json({"data": by_name}, 201).json({"data": by_email}, 201)
         velirapay = client(self.http)
 
-        invoice = velirapay.invoices.create({"currency": "USD", "amount": "1250.00"})
+        invoice = velirapay.invoices.create({"customer_name": "buyer_1042", "currency": "USD", "amount": "1250.00"})
 
-        self.assertEqual({"currency": "USD", "amount": "1250.00"}, body(self.http.last_request()))
-        self.assertIsNone(invoice.customer_name)
+        self.assertEqual(
+            {"customer_name": "buyer_1042", "currency": "USD", "amount": "1250.00"}, body(self.http.last_request())
+        )
+        self.assertEqual("buyer_1042", invoice.customer_name)
         self.assertIsNone(invoice.customer_email)
 
-        velirapay.invoices.create(
-            {"customer_name": None, "customer_email": None, "currency": "USD", "amount": "1250.00"}
+        invoice = velirapay.invoices.create(
+            {"customer_name": None, "customer_email": "grace@example.com", "currency": "USD", "amount": "1250.00"}
         )
 
         self.assertEqual(
-            {"customer_name": None, "customer_email": None, "currency": "USD", "amount": "1250.00"},
+            {"customer_name": None, "customer_email": "grace@example.com", "currency": "USD", "amount": "1250.00"},
             body(self.http.last_request()),
         )
+        self.assertIsNone(invoice.customer_name)
+        self.assertEqual("grace@example.com", invoice.customer_email)
 
     def test_the_amounts_of_a_new_invoice_are_sent_as_decimal_strings(self) -> None:
         self.http.json({"data": fixture("invoice")}, 201).json({"data": fixture("invoice")}, 201)
