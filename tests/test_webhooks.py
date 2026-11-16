@@ -67,6 +67,16 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual([], charge.refunds)
         self.assertIsNone(charge.checkout_url)
 
+    def test_an_answer_delivered_before_types_reads_as_short_text(self) -> None:
+        delivery = json.loads(payload("webhook_charge"))
+        delivery["data"]["charge"]["custom_fields"] = [{"label": "Country", "value": "GB"}]
+        raw = json.dumps(delivery)
+
+        charge = Webhook.construct_event(raw, Webhook.signature_header(raw, SECRET), SECRET).charge
+
+        assert charge is not None
+        self.assertEqual([CustomFieldAnswer(label="Country", value="GB", type="text")], charge.custom_fields)
+
     def test_a_delivery_without_the_ip_country_and_network_reads_them_as_none(self) -> None:
         delivery = json.loads(payload("webhook_charge"))
         for key in ("ip_country", "ip_asn", "ip_network"):
