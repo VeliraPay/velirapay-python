@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from velirapay import (
+    CustomFieldAnswer,
     EventType,
     InvalidArgumentError,
     NetworkReserve,
@@ -61,6 +62,7 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual("Hetzner Online GmbH", charge.customer.ip_network)
         self.assertEqual("ada@example.com", charge.customer.email)
         self.assertEqual({}, charge.customer.metadata)
+        self.assertEqual([CustomFieldAnswer(label="Country", value="GB", type="country")], charge.custom_fields)
         self.assertEqual({"order_id": "1042"}, charge.metadata)
         self.assertEqual([], charge.refunds)
         self.assertIsNone(charge.checkout_url)

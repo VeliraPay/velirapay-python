@@ -12,6 +12,7 @@ from velirapay import (
     Currency,
     MemberRole,
     PlanName,
+    QuestionType,
     WebhookDeliveryStatus,
 )
 
@@ -38,6 +39,7 @@ class EnumTest(unittest.TestCase):
             (PlanName, ["free", "pro"]),
             (AccountType, ["personal", "organization"]),
             (CheckoutLocale, ["en", "fr", "de", "es", "tr", "pt", "ru", "ar"]),
+            (QuestionType, ["text", "textarea", "number", "email", "phone", "url", "date", "select", "checkbox", "country"]),
         ]  # fmt: skip
 
         for enum, values in sets:

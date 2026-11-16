@@ -155,7 +155,14 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("+44 20 7946 0958", charge.customer.phone)
         self.assertEqual("GB", charge.customer.country)
         self.assertEqual({"orders": 7, "verified": True}, charge.customer.metadata)
-        self.assertEqual([CustomFieldAnswer(label="Company", value="Analytical Engines Ltd")], charge.custom_fields)
+        self.assertEqual(
+            [
+                CustomFieldAnswer(label="Company", value="Analytical Engines Ltd"),
+                CustomFieldAnswer(label="Newsletter", value="yes", type="checkbox"),
+            ],
+            charge.custom_fields,
+        )
+        self.assertEqual("text", charge.custom_fields[0].type)
         self.assertEqual({"order_id": "1042"}, charge.metadata)
         self.assertEqual("https://velirapay.com/c/k3v9x2m7q8wz", charge.checkout_url)
         self.assertEqual("https://velirapay.com/c/k3v9x2m7q8wz/receipt", charge.receipt_url)

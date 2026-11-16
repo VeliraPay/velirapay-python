@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from .._enums import PaymentLinkStatus, PricingType
+from .._enums import PaymentLinkStatus, PricingType, QuestionType
 from ._base import (
     ApiResource,
     boolean,
@@ -22,13 +22,37 @@ from ._base import (
 
 @dataclass(frozen=True, slots=True)
 class CheckoutQuestion:
-    """A question a payment link's checkout asks."""
+    """A question a payment link's checkout asks, with its settings: those its type does not use are None."""
 
     label: str
     """What is asked."""
 
     required: bool
     """Whether the customer has to answer it."""
+
+    type: str = QuestionType.TEXT.value
+    """One of the QuestionType values, "text" for a link saved before types."""
+
+    placeholder: str | None = None
+    """A hint shown in the empty field, for text, textarea, number, email and url."""
+
+    help: str | None = None
+    """A line shown under the field."""
+
+    options: list[str] | None = None
+    """The choices of a select question, in order."""
+
+    min: str | None = None
+    """For text and textarea the fewest characters, for number the lowest value, for date the earliest as YYYY-MM-DD."""
+
+    max: str | None = None
+    """For text and textarea the most characters, for number the highest value, for date the latest as YYYY-MM-DD."""
+
+    pattern: str | None = None
+    """For text: a regular expression the whole answer has to match."""
+
+    pattern_hint: str | None = None
+    """The message shown when an answer does not match the pattern."""
 
 
 class PaymentLink(ApiResource):
@@ -115,7 +139,18 @@ class PaymentLink(ApiResource):
     def custom_fields(self) -> list[CheckoutQuestion]:
         """The questions the checkout asks."""
         return [
-            CheckoutQuestion(label=string(field, "label"), required=boolean(field, "required"))
+            CheckoutQuestion(
+                label=string(field, "label"),
+                required=boolean(field, "required"),
+                type=string(field, "type", QuestionType.TEXT.value),
+                placeholder=nullable_string(field, "placeholder"),
+                help=nullable_string(field, "help"),
+                options=nullable_strings(field, "options"),
+                min=nullable_string(field, "min"),
+                max=nullable_string(field, "max"),
+                pattern=nullable_string(field, "pattern"),
+                pattern_hint=nullable_string(field, "pattern_hint"),
+            )
             for field in records(self._attributes, "custom_fields")
         ]
 

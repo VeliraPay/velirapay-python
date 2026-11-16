@@ -29,6 +29,7 @@ from ._enums import (
     PaymentLinkStatus,
     PayoutStatus,
     PricingType,
+    QuestionType,
     WebhookDeliveryStatus,
 )
 
@@ -67,7 +68,7 @@ class CustomerParams(TypedDict, total=False):
 
 
 class CustomFieldParams(TypedDict):
-    """A labelled detail to keep with a charge."""
+    """A labelled detail to keep with a charge, which takes up to ten, each value up to 2,000 characters."""
 
     label: str
     value: str
@@ -150,11 +151,24 @@ class InvoiceListParams(PageParams, total=False):
     overdue: bool
 
 
-class CheckoutQuestionParams(TypedDict):
-    """A question a payment link's checkout asks."""
+class CheckoutQuestionParams(TypedDict, total=False):
+    """A question a payment link's checkout asks. Only label is needed: a question without a type is short text.
 
-    label: str
+    min and max are strings: for text and textarea the fewest and most characters, for number the lowest and highest
+    value, and for date the earliest and latest as YYYY-MM-DD. pattern is a regular expression the whole answer to a
+    text question has to match, and pattern_hint the message shown when it does not.
+    """
+
+    label: Required[str]
+    type: QuestionType | str
     required: bool
+    placeholder: str | None
+    help: str | None
+    options: Sequence[str] | None
+    min: str | None
+    max: str | None
+    pattern: str | None
+    pattern_hint: str | None
 
 
 class _PaymentLinkOptions(TypedDict, total=False):

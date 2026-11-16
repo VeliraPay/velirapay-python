@@ -74,6 +74,21 @@ class PricingType(StrEnum):
     OPEN = "open"
 
 
+class QuestionType(StrEnum):
+    """The kind of field a payment link's checkout question is shown as."""
+
+    TEXT = "text"
+    TEXTAREA = "textarea"
+    NUMBER = "number"
+    EMAIL = "email"
+    PHONE = "phone"
+    URL = "url"
+    DATE = "date"
+    SELECT = "select"
+    CHECKBOX = "checkbox"
+    COUNTRY = "country"
+
+
 class EventType(StrEnum):
     """The events a charge, an invoice or a payout reports, through webhooks and the events API."""
 

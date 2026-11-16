@@ -22,7 +22,30 @@
     "custom_fields": [
         {
             "label": "Message",
-            "required": false
+            "type": "textarea",
+            "required": false,
+            "placeholder": "Say something nice",
+            "help": null,
+            "options": null,
+            "min": null,
+            "max": "500",
+            "pattern": null,
+            "pattern_hint": null
+        },
+        {
+            "label": "Plan",
+            "type": "select",
+            "required": true,
+            "placeholder": null,
+            "help": "You can change it later.",
+            "options": [
+                "Monthly",
+                "Yearly"
+            ],
+            "min": null,
+            "max": null,
+            "pattern": null,
+            "pattern_hint": null
         }
     ],
     "success_message": "Thank you!",

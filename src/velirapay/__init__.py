@@ -22,6 +22,7 @@ from ._enums import (
     PayoutStatus,
     PlanName,
     PricingType,
+    QuestionType,
     WebhookDeliveryStatus,
 )
 from ._errors import (
@@ -272,6 +273,7 @@ __all__ = [
     "ProPayment",
     "ProPaymentParams",
     "ProcessingTerms",
+    "QuestionType",
     "RateLimitError",
     "Refund",
     "RefundParams",

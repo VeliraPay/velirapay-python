@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .._enums import ChargeStatus
+from .._enums import ChargeStatus, QuestionType
 from ._base import (
     ApiResource,
     boolean,
@@ -41,7 +41,10 @@ class CustomFieldAnswer:
     """What was asked."""
 
     value: str
-    """What was answered."""
+    """What was answered, always a string: a ticked checkbox is "yes", a phone number E.164, a country its two-letter code."""
+
+    type: str = QuestionType.TEXT.value
+    """The question's QuestionType value, "text" for a detail passed when creating the charge or kept before types."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,7 +241,11 @@ class Charge(ApiResource):
     def custom_fields(self) -> list[CustomFieldAnswer]:
         """Labelled details: the customer's answers to the payment link's questions, or what was passed when creating the charge."""
         return [
-            CustomFieldAnswer(label=string(field, "label"), value=string(field, "value"))
+            CustomFieldAnswer(
+                label=string(field, "label"),
+                value=string(field, "value"),
+                type=string(field, "type", QuestionType.TEXT.value),
+            )
             for field in records(self._attributes, "custom_fields")
         ]
 

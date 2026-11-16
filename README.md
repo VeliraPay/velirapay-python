@@ -299,7 +299,7 @@ An invoice can be emailed once every 10 minutes, and an account can send 100 ema
 A payment link is one reusable public checkout page, for a fixed price or one the customer chooses, opened by many customers who each pick their own coin. Create it once and share it. To charge one customer, [create a charge](#charges) instead.
 
 ```python
-from velirapay import Asset, PaymentLinkStatus, PricingType
+from velirapay import Asset, PaymentLinkStatus, PricingType, QuestionType
 
 link = velirapay.payment_links.create(
     {
@@ -309,7 +309,11 @@ link = velirapay.payment_links.create(
         "currency": "EUR",
         "accepted_assets": [Asset.BTC, Asset.ETH, Asset.USDC],  # None accepts every coin the account takes
         "success_url": "https://example.com/thanks",
-        "custom_fields": [{"label": "Company", "required": False}],
+        "custom_fields": [
+            {"label": "Company"},  # short text, optional
+            {"label": "Seats", "type": QuestionType.NUMBER, "required": True, "min": "1", "max": "50"},
+            {"label": "Billing", "type": QuestionType.SELECT, "options": ["Monthly", "Yearly"]},
+        ],
     }
 )
 
@@ -331,6 +335,8 @@ velirapay.payment_links.restore(link.id)
 
 existing = velirapay.payment_links.list({"status": PaymentLinkStatus.ACTIVE, "search": "Pro plan"})
 ```
+
+A link asks up to ten questions. Each needs only its `label`; `type` is a `QuestionType` member or its value (short or long text, number, email, phone, link, date, dropdown, checkbox or country) and is short text when left out. A question can also have a `placeholder`, a `help` line, a dropdown's `options`, bounds as strings in `min` and `max` (lengths for text, values for a number, `YYYY-MM-DD` for a date) and, for short text, a regular expression in `pattern` that the whole answer has to match, with `pattern_hint` shown when it does not. `link.custom_fields` reads every setting back as `CheckoutQuestion`s, `None` where a question does not use it. The answers land on the charge as `charge.custom_fields`, each a `CustomFieldAnswer` with its `label`, its `value`, always a string (a ticked checkbox is `"yes"`, a phone number E.164, a country its two-letter code), and the question's `type`.
 
 ## Coupons
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from datetime import UTC, datetime
 
-from velirapay import Asset, CheckoutQuestion, PaymentLink, PricingType
+from velirapay import Asset, CheckoutQuestion, PaymentLink, PricingType, QuestionType
 
 from .support import MockTransport, body, client, fixture, list_response, path_of, query_of
 
@@ -68,6 +68,64 @@ class PaymentLinkTest(unittest.TestCase):
 
         self.assertEqual({"pricing_type": "fixed", "amount": "19.99"}, body(self.http.last_request()))
 
+    def test_typed_questions_are_sent_with_their_settings(self) -> None:
+        self.http.json({"data": fixture("payment_link")}, 201).json({"data": fixture("payment_link")})
+        velirapay = client(self.http)
+
+        velirapay.payment_links.create(
+            {
+                "title": "Tip jar",
+                "pricing_type": PricingType.OPEN,
+                "currency": "USD",
+                "custom_fields": [
+                    {"label": "Plan", "type": QuestionType.SELECT, "required": True, "options": ["Monthly", "Yearly"]},
+                    {
+                        "label": "Order number",
+                        "type": "text",
+                        "pattern": "ORD-[0-9]{6}",
+                        "pattern_hint": "Write it as ORD-123456.",
+                    },
+                    {"label": "Message"},
+                ],
+            }
+        )
+
+        self.assertEqual(
+            [
+                {"label": "Plan", "type": "select", "required": True, "options": ["Monthly", "Yearly"]},
+                {
+                    "label": "Order number",
+                    "type": "text",
+                    "pattern": "ORD-[0-9]{6}",
+                    "pattern_hint": "Write it as ORD-123456.",
+                },
+                {"label": "Message"},
+            ],
+            body(self.http.last_request())["custom_fields"],
+        )
+
+        velirapay.payment_links.update(
+            "p4n8r2t6y1ua",
+            {"custom_fields": [{"label": "Seats", "type": QuestionType.NUMBER, "min": "1", "max": "20"}]},
+        )
+
+        self.assertEqual(
+            {"custom_fields": [{"label": "Seats", "type": "number", "min": "1", "max": "20"}]},
+            body(self.http.last_request()),
+        )
+
+    def test_a_question_saved_before_types_reads_as_short_text(self) -> None:
+        self.http.json(
+            {"data": {**fixture("payment_link"), "custom_fields": [{"label": "Message", "required": False}]}}
+        )
+
+        link = client(self.http).payment_links.retrieve("p4n8r2t6y1ua")
+
+        self.assertEqual([CheckoutQuestion(label="Message", required=False)], link.custom_fields)
+        self.assertEqual("text", link.custom_fields[0].type)
+        self.assertIsNone(link.custom_fields[0].options)
+        self.assertIsNone(link.custom_fields[0].pattern_hint)
+
     def test_a_payment_link_is_read_into_typed_attributes(self) -> None:
         self.http.json({"data": fixture("payment_link")})
 
@@ -87,7 +145,21 @@ class PaymentLinkTest(unittest.TestCase):
         self.assertEqual("https://example.com/thanks", link.success_url)
         self.assertTrue(link.collect_name)
         self.assertFalse(link.require_email)
-        self.assertEqual([CheckoutQuestion(label="Message", required=False)], link.custom_fields)
+        self.assertEqual(
+            [
+                CheckoutQuestion(
+                    label="Message", required=False, type="textarea", placeholder="Say something nice", max="500"
+                ),
+                CheckoutQuestion(
+                    label="Plan",
+                    required=True,
+                    type="select",
+                    help="You can change it later.",
+                    options=["Monthly", "Yearly"],
+                ),
+            ],
+            link.custom_fields,
+        )
         self.assertEqual("Thank you!", link.success_message)
         self.assertIsNone(link.expires_at)
         self.assertEqual(100, link.max_payments)
