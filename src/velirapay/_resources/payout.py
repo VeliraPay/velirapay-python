@@ -102,7 +102,7 @@ class Payout(ApiResource):
 
     @property
     def merchant_network_reserve(self) -> NetworkReserve | None:
-        """What was set aside from the merchant's share for network costs, for a payout whose exact cost is not known as it goes out, such as one in ETH, in TRX or over Lightning; None for older charges, payouts not yet sent and payouts whose cost is known up front, such as in the Bitcoin family or in USDT and USDC."""
+        """What was set aside from the merchant's share for network costs, for a payout whose exact cost is not known as it goes out, such as one in ETH or in TRX; None for older charges, payouts not yet sent and payouts whose cost is known up front, such as in the Bitcoin family or in USDT and USDC."""
         reserve = record(self._attributes, "merchant_network_reserve")
 
         if reserve is None:

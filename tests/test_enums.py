@@ -30,7 +30,7 @@ class EnumTest(unittest.TestCase):
                 AddressNetwork,
                 [
                     "bitcoin", "litecoin", "dogecoin", "bitcoincash", "evm", "bsc", "base", "arbitrum", "polygon",
-                    "tron", "monero", "solana", "lightning",
+                    "tron", "monero", "solana",
                 ],
             ),
             (CheckoutAppearance, ["auto", "light", "dark"]),

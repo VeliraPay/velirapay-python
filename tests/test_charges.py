@@ -130,7 +130,6 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual(datetime(2026, 9, 21, 14, 30, tzinfo=UTC), charge.refunds[0].created_at)
         self.assertEqual("60000", charge.exchange_rate)
         self.assertEqual("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", charge.deposit_address)
-        self.assertIsNone(charge.payment_request)
         self.assertEqual(1, len(charge.transactions))
         self.assertEqual(3, charge.transactions[0].confirmations)
         self.assertEqual(2, charge.transactions[0].required_confirmations)
@@ -184,7 +183,6 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual(Asset.USDT_TRON, charge.asset)
         self.assertEqual("152.5", charge.asset_amount)
         self.assertEqual("2.5", charge.network_surcharge)
-        self.assertIsNone(charge.payment_request)
 
     def test_a_charge_quoted_again_in_the_coin_that_arrived_keeps_its_first_quote(self) -> None:
         self.http.json(
@@ -237,27 +235,6 @@ class ChargeTest(unittest.TestCase):
 
                 self.assertIsNone(charge.processing_terms)
                 self.assertIsNone(charge.switched_from)
-
-    def test_a_lightning_charge_reads_its_invoice(self) -> None:
-        invoice = "lnbc2500u1pjq8w4xpp5qy9nkv7r0v4e5n2s7a3xg6m8d0l2c4f6h8j0k2m4n6p8r0t2v4x6z8sdqqcqzzsxqyz5vq"
-        payment_hash = "a3f1c9e2b7d4058f6e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70"
-        self.http.json(
-            {
-                "data": {
-                    **fixture("charge"),
-                    "asset": "BTC_LIGHTNING",
-                    "deposit_address": payment_hash,
-                    "payment_request": invoice,
-                }
-            }
-        )
-
-        charge = client(self.http).charges.retrieve("k3v9x2m7q8wz")
-
-        self.assertEqual(Asset.BTC_LIGHTNING, charge.asset)
-        self.assertEqual(payment_hash, charge.deposit_address)
-        self.assertEqual(invoice, charge.payment_request)
-        self.assertIsNone(charge.network_surcharge)
 
     def test_the_customers_details_are_sent_with_a_new_charge(self) -> None:
         self.http.json({"data": fixture("charge")}, 201)

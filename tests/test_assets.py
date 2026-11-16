@@ -144,14 +144,14 @@ class AssetTest(unittest.TestCase):
 
     def test_every_coin_the_api_defines_is_known(self) -> None:
         for code in (
-            "BTC", "BTC_LIGHTNING", "LTC", "DOGE", "BCH", "ETH", "XMR", "SOL", "BNB", "TRX", "USDT", "USDC",
+            "BTC", "LTC", "DOGE", "BCH", "ETH", "XMR", "SOL", "BNB", "TRX", "USDT", "USDC",
             "USDT_TRON", "USDC_BASE", "USDC_POLYGON", "USDT_BSC", "USDC_BSC", "USDT_POLYGON", "USDT_ARBITRUM",
             "USDC_ARBITRUM", "ETH_BASE", "ETH_ARBITRUM", "POL",
         ):  # fmt: skip
             with self.subTest(code):
                 self.assertEqual(code, SupportedAsset({"id": code}).asset())
 
-        self.assertEqual(23, len(Asset))
+        self.assertEqual(22, len(Asset))
 
 
 if __name__ == "__main__":

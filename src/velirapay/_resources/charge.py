@@ -201,13 +201,8 @@ class Charge(ApiResource):
 
     @property
     def deposit_address(self) -> str:
-        """The address the customer pays into, or the payment hash of the Lightning invoice for BTC_LIGHTNING."""
+        """The address the customer pays into."""
         return string(self._attributes, "deposit_address")
-
-    @property
-    def payment_request(self) -> str | None:
-        """The Lightning invoice (BOLT11) the customer pays, for BTC_LIGHTNING; None for every other coin."""
-        return nullable_string(self._attributes, "payment_request")
 
     @property
     def transactions(self) -> list[Transaction]:

@@ -9,7 +9,6 @@ class Asset(StrEnum):
     """A coin on one particular network, such as USDT on Ethereum or USDT_TRON on Tron. The account lists the ones it accepts right now."""
 
     BTC = "BTC"
-    BTC_LIGHTNING = "BTC_LIGHTNING"
     LTC = "LTC"
     DOGE = "DOGE"
     BCH = "BCH"
@@ -204,7 +203,6 @@ class AddressNetwork(StrEnum):
     TRON = "tron"
     MONERO = "monero"
     SOLANA = "solana"
-    LIGHTNING = "lightning"
 
 
 class CheckoutAppearance(StrEnum):

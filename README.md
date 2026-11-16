@@ -186,8 +186,6 @@ velirapay.charges.cancel("k3v9x2m7q8wz")
 
 `asset` takes an `Asset` member or its value, such as `"BTC"`. The enum lists every coin the API knows, but not all of them can be paid in at any given time: a coin is only offered while VeliraPay can also pay it out, and a network can be switched off. `account.accepted_assets` lists the coins your account takes right now ([Your account](#your-account)); a charge in any other coin raises a `ValidationError`. The coins of BNB Chain, Base, Arbitrum One and Polygon can only be used with a live key.
 
-A charge in `BTC_LIGHTNING`, Bitcoin over Lightning when it is on offer, is paid with a Lightning invoice: `charge.payment_request` is the BOLT11 invoice to show the customer, as a `lightning:` link or a QR code, and `charge.deposit_address` its payment hash. `payment_request` is `None` for every other coin.
-
 `charge.processing_terms` holds the terms fixed when the charge was quoted, as a `ProcessingTerms`: `percent`, the processing fee in percent of what is paid, leaving out any network surcharge, such as `"1.75"`, and `max_forwarding_percent`, the most passing the payment on to you may cost, in percent of your share after the fee, an `int` such as `10`. It is `None` for older charges and for VeliraPay's own billing.
 
 `metadata` holds up to 20 keys of at most 40 characters each. Values are strings, numbers, booleans or `None`, and a string is at most 500 characters.
@@ -401,7 +399,7 @@ for row in summary:
 summary.mode  # "live" or "test"
 ```
 
-Under the processing terms charges carry (`charge.processing_terms`), your share pays the network costs of forwarding it. When a payout's exact cost is not known as it goes out, such as one in ETH, in TRX or over Lightning, an estimate is set aside from your share first, and `payout.merchant_network_reserve` follows it as a `NetworkReserve`, in the payout's coin:
+Under the processing terms charges carry (`charge.processing_terms`), your share pays the network costs of forwarding it. When a payout's exact cost is not known as it goes out, such as one in ETH or in TRX, an estimate is set aside from your share first, and `payout.merchant_network_reserve` follows it as a `NetworkReserve`, in the payout's coin:
 
 ```python
 reserve = payout.merchant_network_reserve
@@ -848,7 +846,7 @@ Every set of values the API uses is an enum, and each member is also a `str`, so
 | `EventType` | The events webhooks and the events API report, such as `charge.paid` |
 | `WebhookDeliveryStatus` | `pending`, `succeeded`, `failed` |
 | `Currency` | `USD`, `EUR`, `GBP`, `CAD`, `AUD`, `CHF`, `TRY` |
-| `AddressNetwork` | The network families of payout addresses: `bitcoin`, `litecoin`, `dogecoin`, `bitcoincash`, `evm`, `bsc`, `base`, `arbitrum`, `polygon`, `tron`, `monero`, `solana`, `lightning` |
+| `AddressNetwork` | The network families of payout addresses: `bitcoin`, `litecoin`, `dogecoin`, `bitcoincash`, `evm`, `bsc`, `base`, `arbitrum`, `polygon`, `tron`, `monero`, `solana` |
 | `MemberRole` | `owner`, `admin`, `finance`, `support`, `viewer` |
 | `ApiKeyPermission` | What a restricted API key may do, such as `charges:read` |
 | `ActivityAction` | What the activity log records, such as `api_key.created` |
