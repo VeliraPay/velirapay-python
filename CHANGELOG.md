@@ -2,7 +2,7 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.2.6 - 2026-11-17
 
 - Typed checkout questions. `payment_links.create()` and `update()` take, for each of up to ten `custom_fields`, a `type` (a member of the new `QuestionType` or its value: `text`, `textarea`, `number`, `email`, `phone`, `url`, `date`, `select`, `checkbox` or `country`), a `placeholder`, a `help` line, a select's `options`, `min` and `max` as strings, and for text a `pattern` with its `pattern_hint`. Only `label` is needed now (`CheckoutQuestionParams` is `total=False` with `label` required): `{"label": …, "required": …}` alone is still a short text question, as before.
 - `CheckoutQuestion`, what `link.custom_fields` holds, gains `type`, `placeholder`, `help`, `options`, `min`, `max`, `pattern` and `pattern_hint`: `type` is `"text"` for a link saved before types, and the settings a question does not use are `None`. `CustomFieldAnswer`, what `charge.custom_fields` holds in the API and in webhooks, gains `type`, `"text"` for details given when creating the charge or kept before types; `value` stays a string. Both new sets of fields come after the old ones with defaults, so `CheckoutQuestion(label=…, required=…)` and `CustomFieldAnswer(label=…, value=…)` still work.
