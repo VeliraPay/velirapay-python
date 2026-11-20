@@ -420,7 +420,7 @@ if reserve is not None:
     reserve.residual         # what went unused once every cost is known, or None until then
 ```
 
-The residual stays owed to you and is recorded, not sent back on its own. `merchant_network_reserve` is `None` for older charges, for payouts not yet sent and for payouts whose cost is known up front, such as in Bitcoin, Litecoin, Dogecoin and Bitcoin Cash or in USDT and USDC. Payout webhooks carry it too, with the same amounts.
+VeliraPay records the unused amount without an automatic transfer. The [settlement terms](https://velirapay.com/docs/settlement) for that payment determine whether it is owed to you. `merchant_network_reserve` is `None` when the payout has no recorded reserve. Payout webhooks carry it too, with the same amounts.
 
 ### Payout addresses
 

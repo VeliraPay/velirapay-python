@@ -146,12 +146,12 @@ class AssetTest(unittest.TestCase):
         for code in (
             "BTC", "LTC", "DOGE", "BCH", "ETH", "XMR", "SOL", "BNB", "TRX", "USDT", "USDC",
             "USDT_TRON", "USDC_BASE", "USDC_POLYGON", "USDT_BSC", "USDC_BSC", "USDT_POLYGON", "USDT_ARBITRUM",
-            "USDC_ARBITRUM", "ETH_BASE", "ETH_ARBITRUM", "POL",
+            "USDC_ARBITRUM", "ETH_BASE", "ETH_ARBITRUM", "POL", "USDT_SOLANA", "USDC_SOLANA",
         ):  # fmt: skip
             with self.subTest(code):
                 self.assertEqual(code, SupportedAsset({"id": code}).asset())
 
-        self.assertEqual(22, len(Asset))
+        self.assertEqual(24, len(Asset))
 
 
 if __name__ == "__main__":

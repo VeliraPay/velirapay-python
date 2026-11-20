@@ -2,6 +2,11 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Added `Asset.USDT_SOLANA` and `Asset.USDC_SOLANA` and the seven activity actions for team creation and deletion, account deletion, recovery codes and data exports.
+- Clarified how the payment's settlement terms apply to unused network reserves.
+
 ## 0.2.6 - 2026-11-17
 
 - Typed checkout questions. `payment_links.create()` and `update()` take, for each of up to ten `custom_fields`, a `type` (a member of the new `QuestionType` or its value: `text`, `textarea`, `number`, `email`, `phone`, `url`, `date`, `select`, `checkbox` or `country`), a `placeholder`, a `help` line, a select's `options`, `min` and `max` as strings, and for text a `pattern` with its `pattern_hint`. Only `label` is needed now (`CheckoutQuestionParams` is `total=False` with `label` required): `{"label": …, "required": …}` alone is still a short text question, as before.

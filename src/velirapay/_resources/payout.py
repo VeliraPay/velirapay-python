@@ -32,7 +32,7 @@ class NetworkReserve:
     """What is still held for the merchant, counted conservatively while costs are open."""
 
     residual: str | None
-    """What went unused once every cost is known, which stays owed to the merchant and is recorded rather than sent back on its own; None while costs are still open."""
+    """The unused amount once all costs are known, or None while costs are open. The payment's settlement terms determine who keeps it."""
 
 
 class Payout(ApiResource):

@@ -109,6 +109,13 @@ class EnumTest(unittest.TestCase):
             ("SANCTIONS_RETURN_REQUESTED", "sanctions.return_requested"),
             ("SOCIAL_ACCOUNT_CONNECTED", "auth.social_connected"),
             ("SOCIAL_ACCOUNT_DISCONNECTED", "auth.social_disconnected"),
+            ("TEAM_CREATED", "team.created"),
+            ("TEAM_DELETED", "team.deleted"),
+            ("ACCOUNT_DELETED", "auth.account_deleted"),
+            ("RECOVERY_CODES_REGENERATED", "auth.recovery_codes_regenerated"),
+            ("RECOVERY_CODE_USED", "auth.recovery_code_used"),
+            ("DATA_EXPORTED", "data.exported"),
+            ("PERSONAL_DATA_EXPORTED", "auth.data_exported"),
         ]
 
         self.assertEqual(actions, [(action.name, action.value) for action in ActivityAction])
