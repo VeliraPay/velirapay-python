@@ -478,7 +478,7 @@ import os
 
 from flask import Flask, request
 from flask.typing import ResponseReturnValue
-from velirapay import EventType, SignatureVerificationError, Webhook
+from velirapay import EventType, InvalidArgumentError, SignatureVerificationError, Webhook
 
 app = Flask(__name__)
 
@@ -491,14 +491,18 @@ def velirapay_webhook() -> ResponseReturnValue:
             request.headers.get(Webhook.SIGNATURE_HEADER),
             os.environ["VELIRAPAY_WEBHOOK_SECRET"],
         )
-    except SignatureVerificationError:
+    except (SignatureVerificationError, InvalidArgumentError):
         return "", 400
 
     # Sent when the endpoint is added or moved: it receives nothing else until it answers.
-    challenge = event.challenge_response()
-
-    if challenge is not None:
+    if event.is_verification():
+        challenge = event.challenge_response()
+        if challenge is None:
+            return "", 400
         return challenge, 200, {"Content-Type": "application/json"}
+
+    if event.test or not event.is_live_mode():
+        return "", 204
 
     # The same event can arrive more than once: remember this key, and skip the events you have handled.
     key = event.event_id or event.id
@@ -511,8 +515,10 @@ def velirapay_webhook() -> ResponseReturnValue:
         if event.is_live_mode() and order_id is not None:
             ...  # Fulfil the order.
 
-    return "", 200
+    return "Add durable event handling before accepting payments.", 503
 ```
+
+These receivers answer challenges and skip dashboard samples and test-mode events. They return 503 for live events until you check the expected charge, amount and currency and safely store the event with its deduplication key; only then replace that response with a 2xx. Use a separate test-order path when testing your integration.
 
 With FastAPI, read the body as bytes before anything parses it:
 
@@ -520,7 +526,7 @@ With FastAPI, read the body as bytes before anything parses it:
 import os
 
 from fastapi import FastAPI, Request, Response
-from velirapay import EventType, SignatureVerificationError, Webhook
+from velirapay import EventType, InvalidArgumentError, SignatureVerificationError, Webhook
 
 app = FastAPI()
 
@@ -533,19 +539,23 @@ async def velirapay_webhook(request: Request) -> Response:
             request.headers.get(Webhook.SIGNATURE_HEADER),
             os.environ["VELIRAPAY_WEBHOOK_SECRET"],
         )
-    except SignatureVerificationError:
+    except (SignatureVerificationError, InvalidArgumentError):
         return Response(status_code=400)
 
-    challenge = event.challenge_response()
-
-    if challenge is not None:
+    if event.is_verification():
+        challenge = event.challenge_response()
+        if challenge is None:
+            return Response(status_code=400)
         return Response(challenge, media_type="application/json")
+
+    if event.test or not event.is_live_mode():
+        return Response(status_code=204)
 
     if event.is_type(EventType.CHARGE_PAID) and event.charge is not None and event.is_live_mode():
         order_id = event.charge.metadata.get("order_id")  # None for a charge made without one
         ...  # Fulfil the order.
 
-    return Response(status_code=200)
+    return Response("Add durable event handling before accepting payments.", status_code=503)
 ```
 
 In Django, the raw body is `request.body` and the header `request.headers.get(Webhook.SIGNATURE_HEADER)`.
@@ -878,7 +888,7 @@ A failed request raises an error carrying the API's message. They are all import
 | `ValidationError` | The request has invalid fields (422). `errors()` lists them by field, and `first_error("amount")` gives the first message for one. |
 | `RateLimitError` | Too many requests (429), including an invoice or a charge emailed again within 10 minutes, more than 100 emails to customers an hour, and more than 300 charges created in 30 minutes. `retry_after()` says how many seconds to wait. |
 | `ServerError` | VeliraPay had a problem (5xx), such as no exchange rate being available to create a charge with (503). |
-| `InvalidRequestError` | Any other 4xx, such as an `Idempotency-Key` longer than 255 characters (400), or a redirect, which is not followed. |
+| `InvalidRequestError` | Any other 4xx, such as an ASCII `Idempotency-Key` longer than 255 bytes (400), or a redirect, which is not followed. |
 | `UnexpectedResponseError` | A successful answer this library cannot read, such as one that is not JSON. |
 | `ApiConnectionError` | The API could not be reached, or its answer not read, after any retries. |
 | `SignatureVerificationError` | A webhook's signature is missing, does not match, or is too old. |
@@ -913,7 +923,9 @@ response = velirapay.last_response()
 response is not None and response.was_replayed()  # True when the API answered from an earlier request
 ```
 
-For 24 hours, a request repeating a key gets the first successful response, and `velirapay.last_response().was_replayed()` is then true. A request that failed stores nothing, so repeating it runs it again. Reuse a key only to retry the same request, and give a new attempt a new key: a charge replacing one that expired, created under the first one's key, would get the expired charge back for a day, hence keys such as `order-1042-attempt-1` rather than the bare order number. Reusing a key with a different body, such as another coin, raises a `ConflictError`. A key covers one account, one mode, one method and one path, and is at most 255 characters; every API key of that account and mode shares it, so two servers using different API keys still create one charge for one idempotency key.
+For 24 hours, a request repeating a key gets the first successful response, and `velirapay.last_response().was_replayed()` is then true. A request that failed stores nothing, so repeating it runs it again. Reuse a key only to retry the same request, and give a new attempt a new key: a charge replacing one that expired, created under the first one's key, would get the expired charge back for a day, hence keys such as `order-1042-attempt-1` rather than the bare order number. Reusing a key with different serialized JSON body bytes raises a `ConflictError`, even if only property order or whitespace changed. Keep the serialized body unchanged on a retry. A key covers one account, one mode, one method and one path, and is at most 255 bytes; every API key of that account and mode shares it, so two servers using different API keys still create one charge for one idempotency key.
+
+The library requires a nonblank, printable ASCII key, where each character is one byte. A blank or non-ASCII value raises `InvalidArgumentError` before a request is sent.
 
 Three answers carry a secret that is shown once and never kept, so they cannot be replayed: the key that `api_keys.create()` makes, and the signing secret of `webhook_endpoints.create()` and `rotate_secret()`. Repeating one of these, which a retry after a lost answer does, raises a `ConflictError` whose `was_replayed()` is true. The write was carried out, but its secret is gone:
 
