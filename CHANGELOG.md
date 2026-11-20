@@ -2,7 +2,7 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.2.7 - 2026-11-20
 
 - Added `Asset.USDT_SOLANA` and `Asset.USDC_SOLANA` and the seven activity actions for team creation and deletion, account deletion, recovery codes and data exports.
 - Clarified how the payment's settlement terms apply to unused network reserves.

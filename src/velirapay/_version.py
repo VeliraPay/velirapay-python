@@ -1,3 +1,3 @@
 """The version of this library."""
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
