@@ -275,6 +275,11 @@ class Charge(ApiResource):
         return timestamp(self._attributes, "paid_at")
 
     @property
+    def accepted_at(self) -> datetime | None:
+        """When you accepted a short or late payment as paid, which is how the charge became paid; None for a charge the payment itself covered."""
+        return timestamp(self._attributes, "accepted_at")
+
+    @property
     def created_at(self) -> datetime | None:
         """When the charge was created."""
         return timestamp(self._attributes, "created_at")

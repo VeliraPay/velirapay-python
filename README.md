@@ -420,7 +420,7 @@ if reserve is not None:
     reserve.residual         # what went unused once every cost is known, or None until then
 ```
 
-VeliraPay records the unused amount without an automatic transfer. The [settlement terms](https://velirapay.com/docs/settlement) for that payment determine whether it is owed to you. `merchant_network_reserve` is `None` when the payout has no recorded reserve. Payout webhooks carry it too, with the same amounts.
+It is not sent back: VeliraPay keeps it as part of the payout's network cost, as the [settlement terms](https://velirapay.com/docs/settlement) say. `merchant_network_reserve` is `None` when the payout has no recorded reserve. Payout webhooks carry it too, with the same amounts.
 
 ### Payout addresses
 

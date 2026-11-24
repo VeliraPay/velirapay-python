@@ -22,6 +22,12 @@ class InvoiceCharge:
     asset: str
     """The coin the customer tried to pay in."""
 
+    paid_at: datetime | None = None
+    """When the charge was paid."""
+
+    accepted_at: datetime | None = None
+    """When you accepted a short or late payment as paid, which is how the charge became paid; None for a charge the payment itself covered."""
+
 
 class Invoice(ApiResource):
     """A bill addressed to one customer, by name, email or both, paid through a hosted page in the coin they choose."""
@@ -106,6 +112,8 @@ class Invoice(ApiResource):
                 id=string(charge, "id", string(charge, "code")),
                 status=string(charge, "status"),
                 asset=string(charge, "asset"),
+                paid_at=timestamp(charge, "paid_at"),
+                accepted_at=timestamp(charge, "accepted_at"),
             )
             for charge in records(self._attributes, "charges")
         ]

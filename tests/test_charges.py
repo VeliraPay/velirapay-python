@@ -168,6 +168,7 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual("https://velirapay.com/c/k3v9x2m7q8wz/receipt", charge.receipt_url)
         self.assertEqual(datetime(2026, 9, 20, 10, 25, tzinfo=UTC), charge.expires_at)
         self.assertEqual(datetime(2026, 9, 20, 10, 5, 41, tzinfo=UTC), charge.paid_at)
+        self.assertIsNone(charge.accepted_at)
         self.assertEqual(datetime(2026, 9, 20, 9, 55, tzinfo=UTC), charge.created_at)
 
     def test_a_charge_reads_the_network_surcharge_the_customer_pays_on_top_of_the_price(self) -> None:

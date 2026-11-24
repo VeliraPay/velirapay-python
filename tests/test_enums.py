@@ -91,8 +91,10 @@ class EnumTest(unittest.TestCase):
             ("TWO_FACTOR_ENABLED", "auth.two_factor_enabled"),
             ("TWO_FACTOR_DISABLED", "auth.two_factor_disabled"),
             ("SIGNED_OUT_ELSEWHERE", "auth.signed_out_elsewhere"),
+            ("BROWSER_SIGNED_OUT", "auth.browser_signed_out"),
             ("TWO_FACTOR_FAILED", "auth.two_factor_failed"),
             ("EMAIL_CHANGED", "auth.email_changed"),
+            ("EMAIL_CHANGE_UNDONE", "auth.email_change_undone"),
             ("PASSKEY_ADDED", "auth.passkey_added"),
             ("PASSKEY_REMOVED", "auth.passkey_removed"),
             ("COUPON_CREATED", "coupon.created"),
@@ -116,6 +118,8 @@ class EnumTest(unittest.TestCase):
             ("RECOVERY_CODE_USED", "auth.recovery_code_used"),
             ("DATA_EXPORTED", "data.exported"),
             ("PERSONAL_DATA_EXPORTED", "auth.data_exported"),
+            ("CLAUDE_LINKED", "claude.linked"),
+            ("CLAUDE_UNLINKED", "claude.unlinked"),
         ]
 
         self.assertEqual(actions, [(action.name, action.value) for action in ActivityAction])

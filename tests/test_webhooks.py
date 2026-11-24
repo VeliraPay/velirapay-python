@@ -242,6 +242,9 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual("Thank you, your licence is on its way.", invoice.success_message)
         self.assertEqual(datetime(2026, 10, 31, 23, 59, 59, tzinfo=UTC), invoice.expires_at)
         self.assertEqual(["m2q7w4e9r1ty", "z8x6c4v2b0nm"], [charge.id for charge in invoice.charges])
+        self.assertIsNone(invoice.charges[0].accepted_at)
+        self.assertEqual(datetime(2026, 9, 22, 16, 40, 2, tzinfo=UTC), invoice.charges[1].paid_at)
+        self.assertEqual(datetime(2026, 9, 22, 16, 40, 2, tzinfo=UTC), invoice.charges[1].accepted_at)
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
 
     def test_an_invoice_delivery_without_an_email_or_sent_before_it_carried_everything_reads_as_none(self) -> None:
