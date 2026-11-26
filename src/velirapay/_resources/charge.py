@@ -1,4 +1,4 @@
-"""Charges, and the customers, transfers and refunds that belong to them."""
+"""Charges, and the customers, transfers, refunds and refund requests that belong to them."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .._enums import ChargeStatus, QuestionType
+from .._enums import ChargeStatus, QuestionType, RefundRequestStatus
 from ._base import (
     ApiResource,
     boolean,
@@ -465,3 +465,128 @@ class Refund(ApiResource):
     def created_at(self) -> datetime | None:
         """When the refund was recorded."""
         return timestamp(self._attributes, "created_at")
+
+    @property
+    def number(self) -> str | None:
+        """The credit note's number, such as "CN-0001", counted per account and mode."""
+        return nullable_string(self._attributes, "number")
+
+    @property
+    def fiat_amount(self) -> str | None:
+        """What the refund is worth in the charge's fiat_currency, at the rate the charge was locked at."""
+        return nullable_string(self._attributes, "fiat_amount")
+
+    @property
+    def credit_note_url(self) -> str | None:
+        """The printable credit note, which the customer can open too."""
+        return nullable_string(self._attributes, "credit_note_url")
+
+    @property
+    def confirmed_on_chain_at(self) -> datetime | None:
+        """When the chain showed the transfer landing at the customer's address, or None when the refund was recorded on your word."""
+        return timestamp(self._attributes, "confirmed_on_chain_at")
+
+
+class RefundRequest(ApiResource):
+    """A refund started for a charge: what it sets aside, where it goes and how far it has got. VeliraPay never sends it; you do, from your own wallet."""
+
+    __slots__ = ()
+
+    @property
+    def id(self) -> str:
+        """The refund request's id."""
+        return string(self._attributes, "id")
+
+    @property
+    def charge(self) -> str:
+        """The id of the charge being refunded."""
+        return string(self._attributes, "charge")
+
+    @property
+    def status(self) -> str:
+        """One of the RefundRequestStatus values: awaiting_address, awaiting_transfer, confirming, refunded, canceled or expired."""
+        return string(self._attributes, "status")
+
+    @property
+    def amount(self) -> str:
+        """What the refund sets aside, in the charge's coin."""
+        return string(self._attributes, "amount", "0")
+
+    @property
+    def reason(self) -> str | None:
+        """Why the refund is made."""
+        return nullable_string(self._attributes, "reason")
+
+    @property
+    def address(self) -> str | None:
+        """Where the refund goes, once the customer or you gave it."""
+        return nullable_string(self._attributes, "address")
+
+    @property
+    def address_given_by(self) -> str | None:
+        """Who gave the address: "customer" or "merchant"."""
+        return nullable_string(self._attributes, "address_given_by")
+
+    @property
+    def address_url(self) -> str | None:
+        """The signed page the customer gives the address on, while the refund still takes one; None once it is given or the link lapsed."""
+        return nullable_string(self._attributes, "address_url")
+
+    @property
+    def link_expires_at(self) -> datetime | None:
+        """When address_url stops working."""
+        return timestamp(self._attributes, "link_expires_at")
+
+    @property
+    def emailed_at(self) -> datetime | None:
+        """When the link was last emailed to the customer, or None when it never was."""
+        return timestamp(self._attributes, "emailed_at")
+
+    @property
+    def txid(self) -> str | None:
+        """The transaction you said carried the refund, or the one the chain showed."""
+        return nullable_string(self._attributes, "txid")
+
+    @property
+    def detected_amount(self) -> str | None:
+        """What the chain shows arriving at the address for the refund, in the charge's coin."""
+        return nullable_string(self._attributes, "detected_amount")
+
+    @property
+    def confirmations(self) -> int | None:
+        """How many confirmations that transfer has."""
+        return nullable_int(self._attributes, "confirmations")
+
+    @property
+    def refund(self) -> Refund | None:
+        """The refund it was recorded as, once it was."""
+        refund = record(self._attributes, "refund")
+
+        return None if refund is None else Refund(refund)
+
+    @property
+    def created_at(self) -> datetime | None:
+        """When the refund was started."""
+        return timestamp(self._attributes, "created_at")
+
+    @property
+    def completed_at(self) -> datetime | None:
+        """When it was recorded as a refund."""
+        return timestamp(self._attributes, "completed_at")
+
+    @property
+    def canceled_at(self) -> datetime | None:
+        """When it was canceled."""
+        return timestamp(self._attributes, "canceled_at")
+
+    def is_open(self) -> bool:
+        """Whether the refund still sets money aside: it waits for the address, for your transfer or for the chain to confirm it."""
+        return self.status in (
+            RefundRequestStatus.AWAITING_ADDRESS,
+            RefundRequestStatus.AWAITING_TRANSFER,
+            RefundRequestStatus.CONFIRMING,
+        )
+
+    def is_refunded(self) -> bool:
+        """Whether the refund was recorded."""
+        return self.status == RefundRequestStatus.REFUNDED

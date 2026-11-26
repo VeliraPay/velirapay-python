@@ -9,17 +9,23 @@
     "memo": "Thanks for your business.",
     "amount": "1250.00",
     "currency": "USD",
+    "subtotal": null,
+    "discount": null,
+    "discount_percent": null,
+    "tax": null,
     "items": [
         {
             "description": "Consulting",
             "quantity": "10",
             "unit_amount": "100.00",
+            "tax_rate": null,
             "total": "1000.00"
         },
         {
             "description": "Hosting",
             "quantity": "2.5",
             "unit_amount": "100.00",
+            "tax_rate": null,
             "total": "250.00"
         }
     ],

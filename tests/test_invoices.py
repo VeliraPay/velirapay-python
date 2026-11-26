@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 from datetime import UTC, date, datetime, timedelta, timezone
+from decimal import Decimal
 
 from velirapay import Invoice, InvoiceCharge, InvoiceStatus
 
@@ -127,6 +128,87 @@ class InvoiceTest(unittest.TestCase):
             [{"description": "Consulting", "quantity": "2.5", "unit_amount": "99.9"}],
             body(self.http.last_request())["items"],
         )
+
+    def test_the_tax_rates_and_discount_of_a_new_invoice_are_sent_as_decimal_strings(self) -> None:
+        self.http.json({"data": fixture("invoice")}, 201).json({"data": fixture("invoice")}, 201)
+        velirapay = client(self.http)
+
+        velirapay.invoices.create(
+            {
+                "customer_email": "grace@example.com",
+                "currency": "USD",
+                "items": [
+                    {"description": "Consulting", "quantity": "10", "unit_amount": "100.00", "tax_rate": 20.0},
+                    {"description": "Licence", "quantity": 1, "unit_amount": 250, "tax_rate": Decimal("5.50")},
+                    {"description": "Hosting", "quantity": "2.5", "unit_amount": "100.00", "tax_rate": None},
+                    {"description": "Support", "quantity": "1", "unit_amount": "50.00"},
+                ],
+                "discount_percent": 12.5,
+            }
+        )
+
+        sent = body(self.http.last_request())
+        self.assertEqual(
+            [
+                {"description": "Consulting", "quantity": "10", "unit_amount": "100.00", "tax_rate": "20"},
+                {"description": "Licence", "quantity": "1", "unit_amount": "250", "tax_rate": "5.50"},
+                {"description": "Hosting", "quantity": "2.5", "unit_amount": "100.00", "tax_rate": None},
+                {"description": "Support", "quantity": "1", "unit_amount": "50.00"},
+            ],
+            sent["items"],
+        )
+        self.assertEqual("12.5", sent["discount_percent"])
+        self.assertNotIn("discount_amount", sent)
+
+        velirapay.invoices.create(
+            {
+                "customer_email": "grace@example.com",
+                "currency": "USD",
+                "items": [{"description": "Consulting", "quantity": "10", "unit_amount": "100.00"}],
+                "discount_amount": Decimal("25.00"),
+                "discount_percent": None,
+            }
+        )
+
+        sent = body(self.http.last_request())
+        self.assertEqual("25.00", sent["discount_amount"])
+        self.assertIsNone(sent["discount_percent"])
+
+    def test_an_invoice_with_a_discount_and_tax_reads_its_breakdown(self) -> None:
+        attributes = fixture("invoice")
+        attributes.update(
+            amount="1305.00", subtotal="1250.00", discount="125.00", discount_percent="10.00", tax="180.00"
+        )
+        attributes["items"][0]["tax_rate"] = "20.00"
+        self.http.json({"data": attributes})
+
+        invoice = client(self.http).invoices.retrieve("w7c2h5j9d3kx")
+
+        self.assertEqual("1305.00", invoice.amount)
+        self.assertEqual("1250.00", invoice.subtotal)
+        self.assertEqual("125.00", invoice.discount)
+        self.assertEqual("10.00", invoice.discount_percent)
+        self.assertEqual("180.00", invoice.tax)
+        self.assertEqual("20.00", invoice.items[0].tax_rate)
+        self.assertEqual("1000.00", invoice.items[0].total)
+        self.assertIsNone(invoice.items[1].tax_rate)
+
+    def test_an_invoice_without_a_breakdown_or_sent_before_it_reads_it_as_none(self) -> None:
+        older = fixture("invoice")
+        for key in ("subtotal", "discount", "discount_percent", "tax"):
+            del older[key]
+        for item in older["items"]:
+            del item["tax_rate"]
+
+        for label, attributes in (("null", fixture("invoice")), ("absent", older)):
+            with self.subTest(label):
+                invoice = Invoice(attributes)
+
+                self.assertIsNone(invoice.subtotal)
+                self.assertIsNone(invoice.discount)
+                self.assertIsNone(invoice.discount_percent)
+                self.assertIsNone(invoice.tax)
+                self.assertEqual([None, None], [item.tax_rate for item in invoice.items])
 
     def test_an_invoice_is_read_into_typed_attributes(self) -> None:
         self.http.json({"data": fixture("invoice")})

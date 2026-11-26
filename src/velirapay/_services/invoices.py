@@ -17,8 +17,8 @@ class InvoiceService(Service):
     __slots__ = ()
 
     def create(self, params: InvoiceCreateParams, *, idempotency_key: str | None = None) -> Invoice:
-        """Create an invoice, for a total or a list of items, and optionally email it to the customer. It names the customer by customer_name, customer_email or both, and one with neither raises a ValidationError on customer_name. A datetime due_at is sent as its day, in its own time zone, and a datetime expires_at as that moment, in UTC."""
-        body = amounts(params, "amount")
+        """Create an invoice, for a total or a list of items, and optionally email it to the customer. It names the customer by customer_name, customer_email or both, and one with neither raises a ValidationError on customer_name. Items can each carry a tax_rate, and the invoice a discount_percent or a discount_amount taken off them before tax. A datetime due_at is sent as its day, in its own time zone, and a datetime expires_at as that moment, in UTC."""
+        body = amounts(params, "amount", "discount_percent", "discount_amount")
         due_at = body.get("due_at")
         items = body.get("items")
 
@@ -27,7 +27,8 @@ class InvoiceService(Service):
 
         if isinstance(items, Sequence) and not isinstance(items, str | bytes | bytearray):
             body["items"] = [
-                amounts(item, "quantity", "unit_amount") if isinstance(item, Mapping) else item for item in items
+                amounts(item, "quantity", "unit_amount", "tax_rate") if isinstance(item, Mapping) else item
+                for item in items
             ]
 
         return Invoice(self._request("POST", "/v1/invoices", body, idempotency_key))

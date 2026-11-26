@@ -26,7 +26,11 @@
             "txid": "c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
             "reason": "Partial refund",
             "explorer_url": "https://mempool.space/tx/c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
-            "created_at": "2026-09-21T14:30:00.000000Z"
+            "created_at": "2026-09-21T14:30:00.000000Z",
+            "number": "CN-0001",
+            "fiat_amount": "30.00",
+            "credit_note_url": "https://velirapay.com/c/k3v9x2m7q8wz/credit-notes/CN-0001",
+            "confirmed_on_chain_at": null
         }
     ],
     "exchange_rate": "60000",

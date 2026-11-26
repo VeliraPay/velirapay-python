@@ -252,6 +252,38 @@ if first is not None:
     charge.asset         # "USDT_TRON", the coin that arrived
 ```
 
+### Refunds
+
+`record_refund()` writes down a refund you already sent. A refund request does the rest: it sets the amount aside, so nothing can refund it twice, asks the customer for their address unless you give it, follows the transfer you send from your own wallet, and records the refund once it has its confirmations, with `charge.refunded` and the customer's email. VeliraPay never sends it for you.
+
+```python
+# The link to give the address is emailed when the charge has the customer's email, and is address_url either way.
+refund = velirapay.charges.start_refund(
+    "k3v9x2m7q8wz", {"amount": "0.0005", "reason": "Order canceled"}, idempotency_key="refund-1042-1"
+)
+
+refund.status       # "awaiting_address"
+refund.address_url  # the page the customer gives the address on, for 14 days
+
+# Or give the address the customer told you some other way, then send the refund and give its hash.
+velirapay.charges.set_refund_address("k3v9x2m7q8wz", refund.id, {"address": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"})
+velirapay.charges.mark_refund_sent("k3v9x2m7q8wz", refund.id, {"txid": "b6f6991d…"})
+
+for started in velirapay.charges.refund_requests("k3v9x2m7q8wz"):
+    started.status  # a RefundRequestStatus value
+
+recorded = velirapay.charges.retrieve_refund_request("k3v9x2m7q8wz", refund.id).refund
+
+if recorded is not None:
+    recorded.number           # "CN-0007", its credit note
+    recorded.fiat_amount      # what it is worth in the charge's currency, at the charge's rate
+    recorded.credit_note_url  # the printable credit note, which the customer can open too
+```
+
+A refund request is `awaiting_address` until the customer gives the address, `awaiting_transfer` until you send the refund, `confirming` while the chain confirms it, then `refunded`; or `canceled`, by `cancel_refund()`, which frees what it set aside, or `expired` when the customer never gave the address. `is_open()` is true while it still sets money aside. `resend_refund_link()` emails the customer the link again, at most once every 10 minutes, and it then works for another 14 days. Only the newest transfers to the customer's address are read, and a Monero transfer cannot be seen at all, so `complete_refund()` records the refund on your word, with its `txid` when you have one, and its `confirmed_on_chain_at` is then `None`.
+
+A call the refund request no longer takes, such as giving an address twice or cancelling a refund already recorded, raises a `ConflictError`, and an amount over what can still be refunded, an address that is not on the charge's network and mode, or a hash that already stands for a payment, a payout or another refund a `ValidationError` naming the field. Refund requests need `charges:refund`, reads included, since whoever has `address_url` can say where the money goes, and changes to them are limited to 10 a minute.
+
 ## Invoices
 
 An invoice is a bill with a hosted page, where the customer pays in the coin of their choice. Use it for a bill to pay later, or when the customer should choose the coin.
@@ -287,6 +319,27 @@ hers = velirapay.invoices.list({"search": "grace@example.com"})
 ```
 
 Pass `amount` instead of `items` to bill a single total. Either way the invoice comes to at least the lowest price of its currency, though its items may each cost less.
+
+Each item can carry a `tax_rate`, in percent from 0 to 100, and an itemised invoice a `discount_percent` or a `discount_amount`, taken off the items before tax; a discount with `amount` rather than items, or both discounts together, raises a `ValidationError`. The invoice is then for the items less the discount plus the tax, and reads back its `subtotal`, `discount`, `discount_percent` and `tax`, and each item its `tax_rate`, all `None` for an invoice without them:
+
+```python
+invoice = velirapay.invoices.create(
+    {
+        "customer_email": "grace@example.com",
+        "currency": "USD",
+        "items": [
+            {"description": "Consulting", "quantity": "10", "unit_amount": "100.00", "tax_rate": "20"},
+            {"description": "Hosting", "quantity": "2.5", "unit_amount": "100.00"},
+        ],
+        "discount_percent": "10",
+    }
+)
+
+invoice.subtotal  # "1250.00"
+invoice.discount  # "125.00"
+invoice.tax       # "180.00", 20% of the consulting after its share of the discount
+invoice.amount    # "1305.00", what the customer is charged
+```
 
 An invoice names its customer by `customer_name`, `customer_email` or both. A name alone, such as the buyer's username on your site, is enough, and `customer_email` then reads back as `None`, as `customer_name` does for an email alone. Leaving out both raises a `ValidationError` on `customer_name` and creates nothing. Without a `customer_email` an invoice cannot be emailed: `create()` with `send_email` raises a `ValidationError` on `customer_email` and creates nothing, and `send()` raises the same.
 
@@ -801,7 +854,7 @@ Paying for Pro needs `billing:write`, which full access includes.
 
 | Attribute | Methods |
 | --- | --- |
-| `charges` | `create`, `retrieve`, `list`, `iterator`, `send`, `cancel`, `accept`, `record_refund`, `simulate` |
+| `charges` | `create`, `retrieve`, `list`, `iterator`, `send`, `cancel`, `accept`, `record_refund`, `simulate`, `refund_requests`, `retrieve_refund_request`, `start_refund`, `set_refund_address`, `mark_refund_sent`, `complete_refund`, `resend_refund_link`, `cancel_refund` |
 | `invoices` | `create`, `retrieve`, `list`, `iterator`, `send`, `void` |
 | `payment_links` | `create`, `retrieve`, `update`, `list`, `iterator`, `archive`, `restore` |
 | `coupons` | `create`, `retrieve`, `update`, `list`, `iterator`, `delete` |
@@ -856,6 +909,7 @@ Every set of values the API uses is an enum, and each member is also a `str`, so
 | `Asset` | The coins, each on one network, such as `BTC`, `USDT` (on Ethereum) and `USDT_TRON` |
 | `ChargeStatus` | `pending`, `underpaid`, `paid`, `expired`, `canceled` |
 | `InvoiceStatus` | `open`, `paid`, `void` |
+| `RefundRequestStatus` | `awaiting_address`, `awaiting_transfer`, `confirming`, `refunded`, `canceled`, `expired` |
 | `PaymentLinkStatus` | `active`, `archived` |
 | `PricingType` | `fixed`, `open` |
 | `PayoutStatus` | `pending`, `sending`, `sent`, `failed`, `manual` |

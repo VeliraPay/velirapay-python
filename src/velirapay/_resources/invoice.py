@@ -158,6 +158,26 @@ class Invoice(ApiResource):
         """What the customer is told once they have paid, or None when the account's own message applies."""
         return nullable_string(self._attributes, "success_message")
 
+    @property
+    def subtotal(self) -> str | None:
+        """What the items came to before the discount and tax, or None for an invoice whose items carry neither, whose amount is then their sum."""
+        return nullable_string(self._attributes, "subtotal")
+
+    @property
+    def discount(self) -> str | None:
+        """What the discount took off the items before tax, in the invoice's currency, or None when there is none."""
+        return nullable_string(self._attributes, "discount")
+
+    @property
+    def discount_percent(self) -> str | None:
+        """The percentage the discount took off, or None for a fixed discount or none."""
+        return nullable_string(self._attributes, "discount_percent")
+
+    @property
+    def tax(self) -> str | None:
+        """The tax added on top of the items at their tax rates, after the discount, or None for an invoice without a breakdown."""
+        return nullable_string(self._attributes, "tax")
+
     def is_open(self) -> bool:
         """Whether the invoice can still be paid; past its expires_at, only a payment already started can be finished."""
         return self.status == InvoiceStatus.OPEN
@@ -193,5 +213,10 @@ class InvoiceItem(ApiResource):
 
     @property
     def total(self) -> str:
-        """The quantity times the unit amount."""
+        """The quantity times the unit amount, before tax."""
         return string(self._attributes, "total", "0")
+
+    @property
+    def tax_rate(self) -> str | None:
+        """The tax rate on the line, in percent, or None when it carries none."""
+        return nullable_string(self._attributes, "tax_rate")

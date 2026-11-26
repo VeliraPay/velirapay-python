@@ -246,6 +246,12 @@ class WebhookTest(unittest.TestCase):
         self.assertEqual(datetime(2026, 9, 22, 16, 40, 2, tzinfo=UTC), invoice.charges[1].paid_at)
         self.assertEqual(datetime(2026, 9, 22, 16, 40, 2, tzinfo=UTC), invoice.charges[1].accepted_at)
         self.assertEqual(date(2026, 10, 15), invoice.due_at)
+        self.assertEqual("1305.00", invoice.amount)
+        self.assertEqual("1250.00", invoice.subtotal)
+        self.assertEqual("125.00", invoice.discount)
+        self.assertEqual("10.00", invoice.discount_percent)
+        self.assertEqual("180.00", invoice.tax)
+        self.assertEqual(["20.00", None], [item.tax_rate for item in invoice.items])
 
     def test_an_invoice_delivery_without_an_email_or_sent_before_it_carried_everything_reads_as_none(self) -> None:
         delivery = json.loads(payload("webhook_invoice"))
@@ -253,8 +259,22 @@ class WebhookTest(unittest.TestCase):
         invoice_data["customer_name"] = "buyer_1042"
         invoice_data["customer_email"] = None
 
-        for key in ("expires_at", "overdue", "document_url", "success_url", "cancel_url", "success_message"):
+        for key in (
+            "expires_at",
+            "overdue",
+            "document_url",
+            "success_url",
+            "cancel_url",
+            "success_message",
+            "subtotal",
+            "discount",
+            "discount_percent",
+            "tax",
+        ):
             del invoice_data[key]
+
+        for item in invoice_data["items"]:
+            del item["tax_rate"]
 
         raw = json.dumps(delivery)
 
@@ -269,6 +289,11 @@ class WebhookTest(unittest.TestCase):
         self.assertIsNone(invoice.success_url)
         self.assertIsNone(invoice.cancel_url)
         self.assertIsNone(invoice.success_message)
+        self.assertIsNone(invoice.subtotal)
+        self.assertIsNone(invoice.discount)
+        self.assertIsNone(invoice.discount_percent)
+        self.assertIsNone(invoice.tax)
+        self.assertEqual([None, None], [item.tax_rate for item in invoice.items])
 
     def test_signatures_made_by_velirapay_are_accepted(self) -> None:
         raw = '{"id":"5f0c6f5e-8d1b-4a53-9a57-3c2b1d0e9f87","event_id":"9b1f7a3e-2c4d-4e8f-a6b0-1d2c3e4f5a6b","event":"charge.paid","mode":"live","created_at":"2026-09-20T10:05:42.000000Z","data":{"charge":{"code":"k3v9x2m7q8wz","status":"paid"}}}'

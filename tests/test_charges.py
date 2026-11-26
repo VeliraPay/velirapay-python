@@ -128,6 +128,10 @@ class ChargeTest(unittest.TestCase):
         self.assertEqual(1, len(charge.refunds))
         self.assertEqual("Partial refund", charge.refunds[0].reason)
         self.assertEqual(datetime(2026, 9, 21, 14, 30, tzinfo=UTC), charge.refunds[0].created_at)
+        self.assertEqual("CN-0001", charge.refunds[0].number)
+        self.assertEqual("30.00", charge.refunds[0].fiat_amount)
+        self.assertEqual("https://velirapay.com/c/k3v9x2m7q8wz/credit-notes/CN-0001", charge.refunds[0].credit_note_url)
+        self.assertIsNone(charge.refunds[0].confirmed_on_chain_at)
         self.assertEqual("60000", charge.exchange_rate)
         self.assertEqual("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", charge.deposit_address)
         self.assertEqual(1, len(charge.transactions))
@@ -243,6 +247,19 @@ class ChargeTest(unittest.TestCase):
 
                 self.assertIsNone(charge.processing_terms)
                 self.assertIsNone(charge.switched_from)
+
+    def test_a_refund_recorded_before_credit_notes_reads_them_as_none(self) -> None:
+        older = fixture("charge")
+        for key in ("number", "fiat_amount", "credit_note_url", "confirmed_on_chain_at"):
+            del older["refunds"][0][key]
+
+        refund = Charge(older).refunds[0]
+
+        self.assertEqual("0.0005", refund.amount)
+        self.assertIsNone(refund.number)
+        self.assertIsNone(refund.fiat_amount)
+        self.assertIsNone(refund.credit_note_url)
+        self.assertIsNone(refund.confirmed_on_chain_at)
 
     def test_the_customers_details_are_sent_with_a_new_charge(self) -> None:
         self.http.json({"data": fixture("charge")}, 201)

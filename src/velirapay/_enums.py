@@ -52,6 +52,17 @@ class InvoiceStatus(StrEnum):
     VOID = "void"
 
 
+class RefundRequestStatus(StrEnum):
+    """The states a refund request moves through, from the customer's address to the refund landing."""
+
+    AWAITING_ADDRESS = "awaiting_address"
+    AWAITING_TRANSFER = "awaiting_transfer"
+    CONFIRMING = "confirming"
+    REFUNDED = "refunded"
+    CANCELED = "canceled"
+    EXPIRED = "expired"
+
+
 class PayoutStatus(StrEnum):
     """Where a payout has got to."""
 
@@ -295,6 +306,8 @@ class ActivityAction(StrEnum):
     CHARGE_CANCELED = "charge.canceled"
     CHARGE_ACCEPTED = "charge.accepted"
     REFUND_RECORDED = "refund.recorded"
+    REFUND_REQUESTED = "refund.requested"
+    REFUND_CANCELED = "refund.canceled"
     INVOICE_VOIDED = "invoice.voided"
     PLAN_PAYMENT_STARTED = "plan.payment_started"
     SUBSCRIPTION_CANCELED = "plan.subscription_canceled"
@@ -334,3 +347,5 @@ class ActivityAction(StrEnum):
     PERSONAL_DATA_EXPORTED = "auth.data_exported"
     CLAUDE_LINKED = "claude.linked"
     CLAUDE_UNLINKED = "claude.unlinked"
+    ACCOUNTING_CONNECTED = "accounting.connected"
+    ACCOUNTING_DISCONNECTED = "accounting.disconnected"

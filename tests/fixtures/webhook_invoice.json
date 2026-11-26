@@ -9,19 +9,25 @@
             "code": "w7c2h5j9d3kx",
             "number": "INV-0042",
             "status": "paid",
-            "amount": "1250.00",
+            "amount": "1305.00",
             "currency": "USD",
+            "subtotal": "1250.00",
+            "discount": "125.00",
+            "discount_percent": "10.00",
+            "tax": "180.00",
             "items": [
                 {
                     "description": "Consulting",
                     "quantity": "10",
                     "unit_amount": "100.00",
+                    "tax_rate": "20.00",
                     "total": "1000.00"
                 },
                 {
                     "description": "Hosting",
                     "quantity": "2.5",
                     "unit_amount": "100.00",
+                    "tax_rate": null,
                     "total": "250.00"
                 }
             ],

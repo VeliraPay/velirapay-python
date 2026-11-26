@@ -1,0 +1,30 @@
+{
+    "id": "r8k2m4q7xw3e",
+    "object": "refund_request",
+    "charge": "k3v9x2m7q8wz",
+    "status": "refunded",
+    "amount": "0.0005",
+    "reason": "Order canceled",
+    "address": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+    "address_given_by": "customer",
+    "address_url": null,
+    "link_expires_at": "2026-12-10T09:00:00.000000Z",
+    "emailed_at": "2026-11-26T09:00:00.000000Z",
+    "txid": "c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
+    "detected_amount": "0.0005",
+    "confirmations": 3,
+    "refund": {
+        "amount": "0.0005",
+        "txid": "c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
+        "reason": "Order canceled",
+        "explorer_url": "https://mempool.space/tx/c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
+        "created_at": "2026-11-26T10:00:00.000000Z",
+        "number": "CN-0007",
+        "fiat_amount": "30.00",
+        "credit_note_url": "https://velirapay.com/c/k3v9x2m7q8wz/credit-notes/CN-0007",
+        "confirmed_on_chain_at": "2026-11-26T10:00:00.000000Z"
+    },
+    "created_at": "2026-11-26T09:00:00.000000Z",
+    "completed_at": "2026-11-26T10:00:00.000000Z",
+    "canceled_at": null
+}

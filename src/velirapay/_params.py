@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Required, TypeAlias, TypedDict
+from typing import NotRequired, Required, TypeAlias, TypedDict
 
 from ._enums import (
     ActivityAction,
@@ -118,22 +118,55 @@ class SimulateParams(TypedDict, total=False):
     amount: Amount | None
 
 
+class RefundRequestCreateParams(TypedDict, total=False):
+    """A refund to start, in the charge's coin. address is where the customer already told you to send it; left out, they are asked for one."""
+
+    amount: Required[Amount]
+    reason: str | None
+    address: str | None
+
+
+class RefundAddressParams(TypedDict):
+    """The address the customer gave you for a refund, on the charge's network and mode."""
+
+    address: str
+
+
+class RefundSentParams(TypedDict):
+    """The hash of the transaction you sent a refund in."""
+
+    txid: str
+
+
+class RefundCompleteParams(TypedDict, total=False):
+    """The hash of the transaction that carried a refund recorded on your word, when there is one."""
+
+    txid: str | None
+
+
 class InvoiceItemParams(TypedDict):
-    """A line of an itemised invoice."""
+    """A line of an itemised invoice. tax_rate is in percent, from 0 to 100, added on top of the line after any discount."""
 
     description: str
     quantity: Amount
     unit_amount: Amount
+    tax_rate: NotRequired[Amount | None]
 
 
 class InvoiceCreateParams(TypedDict, total=False):
-    """A new invoice, for a single amount or a list of items. It names its customer by customer_name, customer_email or both, a name such as a username being enough, and send_email needs customer_email; due_at is a day, as YYYY-MM-DD or a date; expires_at is when it stops taking new payments, a day meaning 23:59:59 UTC that day."""
+    """A new invoice, for a single amount or a list of items. It names its customer by customer_name, customer_email or both, a name such as a username being enough, and send_email needs customer_email; due_at is a day, as YYYY-MM-DD or a date; expires_at is when it stops taking new payments, a day meaning 23:59:59 UTC that day.
+
+    discount_percent or discount_amount, never both and only with items, is taken off the items before tax: a percentage
+    above 0 and below 100, or an amount in the invoice's currency less than the items come to.
+    """
 
     customer_name: str | None
     customer_email: str | None
     currency: Required[Currency | str]
     amount: Amount
     items: Sequence[InvoiceItemParams]
+    discount_percent: Amount | None
+    discount_amount: Amount | None
     memo: str | None
     due_at: str | date | None
     expires_at: Moment | None

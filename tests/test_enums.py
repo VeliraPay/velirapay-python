@@ -13,6 +13,7 @@ from velirapay import (
     MemberRole,
     PlanName,
     QuestionType,
+    RefundRequestStatus,
     WebhookDeliveryStatus,
 )
 
@@ -40,6 +41,10 @@ class EnumTest(unittest.TestCase):
             (AccountType, ["personal", "organization"]),
             (CheckoutLocale, ["en", "fr", "de", "es", "tr", "pt", "ru", "ar"]),
             (QuestionType, ["text", "textarea", "number", "email", "phone", "url", "date", "select", "checkbox", "country"]),
+            (
+                RefundRequestStatus,
+                ["awaiting_address", "awaiting_transfer", "confirming", "refunded", "canceled", "expired"],
+            ),
         ]  # fmt: skip
 
         for enum, values in sets:
@@ -81,6 +86,8 @@ class EnumTest(unittest.TestCase):
             ("CHARGE_CANCELED", "charge.canceled"),
             ("CHARGE_ACCEPTED", "charge.accepted"),
             ("REFUND_RECORDED", "refund.recorded"),
+            ("REFUND_REQUESTED", "refund.requested"),
+            ("REFUND_CANCELED", "refund.canceled"),
             ("INVOICE_VOIDED", "invoice.voided"),
             ("PLAN_PAYMENT_STARTED", "plan.payment_started"),
             ("SUBSCRIPTION_CANCELED", "plan.subscription_canceled"),
@@ -120,6 +127,8 @@ class EnumTest(unittest.TestCase):
             ("PERSONAL_DATA_EXPORTED", "auth.data_exported"),
             ("CLAUDE_LINKED", "claude.linked"),
             ("CLAUDE_UNLINKED", "claude.unlinked"),
+            ("ACCOUNTING_CONNECTED", "accounting.connected"),
+            ("ACCOUNTING_DISCONNECTED", "accounting.disconnected"),
         ]
 
         self.assertEqual(actions, [(action.name, action.value) for action in ActivityAction])
