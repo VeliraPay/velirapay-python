@@ -2,7 +2,7 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.2.10 - 2026-11-28
 
 - `RefundRequest` gains `detected_txid`, the transfer the chain shows at the customer's address. A refund request no longer records a transfer it found by its amount alone, since others may pay that address too: while `txid` is `None`, `detected_txid` names one that fits and the status stays `awaiting_transfer` until you give it to `mark_refund_sent()`. `txid` is now only the hash you gave.
 
