@@ -544,12 +544,17 @@ class RefundRequest(ApiResource):
 
     @property
     def txid(self) -> str | None:
-        """The transaction you said carried the refund, or the one the chain showed."""
+        """The transaction you said carried the refund."""
         return nullable_string(self._attributes, "txid")
 
     @property
+    def detected_txid(self) -> str | None:
+        """The transfer the chain shows at the address: the one with your hash, or, while txid is None, one that fits the refund and waits for you to give it to mark_refund_sent()."""
+        return nullable_string(self._attributes, "detected_txid")
+
+    @property
     def detected_amount(self) -> str | None:
-        """What the chain shows arriving at the address for the refund, in the charge's coin."""
+        """What that transfer carried, in the charge's coin."""
         return nullable_string(self._attributes, "detected_amount")
 
     @property

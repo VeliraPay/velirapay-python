@@ -11,6 +11,7 @@
     "link_expires_at": "2026-12-10T09:00:00.000000Z",
     "emailed_at": "2026-11-26T09:00:00.000000Z",
     "txid": "c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
+    "detected_txid": "c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090",
     "detected_amount": "0.0005",
     "confirmations": 3,
     "refund": {

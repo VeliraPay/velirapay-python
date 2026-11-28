@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- `RefundRequest` gains `detected_txid`, the transfer the chain shows at the customer's address. A refund request no longer records a transfer it found by its amount alone, since others may pay that address too: while `txid` is `None`, `detected_txid` names one that fits and the status stays `awaiting_transfer` until you give it to `mark_refund_sent()`. `txid` is now only the hash you gave.
+
 ## 0.2.9 - 2026-11-26
 
 - Refund requests, through eight new methods on `charges`: `refund_requests()` (a `Page` of the charge's refund requests, newest first), `retrieve_refund_request()`, `start_refund()`, `set_refund_address()`, `mark_refund_sent()`, `complete_refund()`, `resend_refund_link()` and `cancel_refund()`. Each takes the charge's id, the ones that act on a refund request its id too, and the writes an `idempotency_key`. `start_refund()` sets an amount of the charge's coin aside, so nothing can refund it twice, and, unless it is given the `address`, asks the customer for one: the link is emailed to the charge's customer email when it has one, and is the request's `address_url` either way, working for 14 days. You send the refund from your own wallet, VeliraPay follows the transfer to the address, or the hash you give `mark_refund_sent()`, and records the refund once it has its confirmations, with `charge.refunded` and the customer's email as before. `complete_refund()` records it on your word, with or without a `txid`, for a transfer the chain cannot be seen to carry, such as one in Monero. Their parameters are typed as `RefundRequestCreateParams`, `RefundAddressParams`, `RefundSentParams` and `RefundCompleteParams`, and the amount is sent as a decimal string, as elsewhere. They need `charges:refund`, reads included, and a call the refund request no longer takes raises a `ConflictError`.

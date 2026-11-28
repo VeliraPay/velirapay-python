@@ -254,7 +254,7 @@ if first is not None:
 
 ### Refunds
 
-`record_refund()` writes down a refund you already sent. A refund request does the rest: it sets the amount aside, so nothing can refund it twice, asks the customer for their address unless you give it, follows the transfer you send from your own wallet, and records the refund once it has its confirmations, with `charge.refunded` and the customer's email. VeliraPay never sends it for you.
+`record_refund()` writes down a refund you already sent. A refund request does the rest: it sets the amount aside, so nothing can refund it twice, asks the customer for their address unless you give it, follows the transfer you send from your own wallet once you give its hash with `mark_refund_sent()`, and records the refund once it has its confirmations, with `charge.refunded` and the customer's email. Until you give a hash, a transfer that fits the refund is only shown, as `detected_txid`, since others may pay that address too: pass it to `mark_refund_sent()` to say it is yours. VeliraPay never sends it for you.
 
 ```python
 # The link to give the address is emailed when the charge has the customer's email, and is address_url either way.
@@ -280,7 +280,7 @@ if recorded is not None:
     recorded.credit_note_url  # the printable credit note, which the customer can open too
 ```
 
-A refund request is `awaiting_address` until the customer gives the address, `awaiting_transfer` until you send the refund, `confirming` while the chain confirms it, then `refunded`; or `canceled`, by `cancel_refund()`, which frees what it set aside, or `expired` when the customer never gave the address. `is_open()` is true while it still sets money aside. `resend_refund_link()` emails the customer the link again, at most once every 10 minutes, and it then works for another 14 days. Only the newest transfers to the customer's address are read, and a Monero transfer cannot be seen at all, so `complete_refund()` records the refund on your word, with its `txid` when you have one, and its `confirmed_on_chain_at` is then `None`.
+A refund request is `awaiting_address` until the customer gives the address, `awaiting_transfer` until you send the refund and give its hash, `confirming` while the chain confirms it, then `refunded`; or `canceled`, by `cancel_refund()`, which frees what it set aside, or `expired` when the customer never gave the address. `is_open()` is true while it still sets money aside. `resend_refund_link()` emails the customer the link again, at most once every 10 minutes, and it then works for another 14 days. Only the newest transfers to the customer's address are read, and a Monero transfer cannot be seen at all, so `complete_refund()` records the refund on your word, with its `txid` when you have one, and its `confirmed_on_chain_at` is then `None`.
 
 A call the refund request no longer takes, such as giving an address twice or cancelling a refund already recorded, raises a `ConflictError`, and an amount over what can still be refunded, an address that is not on the charge's network and mode, or a hash that already stands for a payment, a payout or another refund a `ValidationError` naming the field. Refund requests need `charges:refund`, reads included, since whoever has `address_url` can say where the money goes, and changes to them are limited to 10 a minute.
 

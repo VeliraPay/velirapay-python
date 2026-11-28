@@ -84,6 +84,7 @@ class RefundRequestTest(unittest.TestCase):
         self.assertEqual(datetime(2026, 12, 10, 9, 0, tzinfo=UTC), refund_request.link_expires_at)
         self.assertEqual(datetime(2026, 11, 26, 9, 0, tzinfo=UTC), refund_request.emailed_at)
         self.assertEqual("c1f0e2d3b4a5968778695a4b3c2d1e0f9e8d7c6b5a49382716f5e4d3c2b1a090", refund_request.txid)
+        self.assertEqual(refund_request.txid, refund_request.detected_txid)
         self.assertEqual("0.0005", refund_request.detected_amount)
         self.assertEqual(3, refund_request.confirmations)
         self.assertEqual(datetime(2026, 11, 26, 9, 0, tzinfo=UTC), refund_request.created_at)
@@ -108,6 +109,7 @@ class RefundRequestTest(unittest.TestCase):
                 "address_given_by": None,
                 "address_url": "https://velirapay.com/r/r8k2m4q7xw3e?signature=abc",
                 "txid": None,
+                "detected_txid": None,
                 "detected_amount": None,
                 "confirmations": None,
                 "refund": None,
@@ -121,6 +123,7 @@ class RefundRequestTest(unittest.TestCase):
         self.assertIsNone(refund_request.address_given_by)
         self.assertEqual("https://velirapay.com/r/r8k2m4q7xw3e?signature=abc", refund_request.address_url)
         self.assertIsNone(refund_request.txid)
+        self.assertIsNone(refund_request.detected_txid)
         self.assertIsNone(refund_request.detected_amount)
         self.assertIsNone(refund_request.confirmations)
         self.assertIsNone(refund_request.refund)
